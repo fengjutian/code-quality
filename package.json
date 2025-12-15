@@ -3,7 +3,6 @@
   "displayName": "VSCode Code Quality",
   "description": "VSCode plugin to analyze code quality",
   "version": "0.0.1",
-  "type": "module",
   "engines": {
     "vscode": "^1.80.0"
   },
