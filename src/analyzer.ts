@@ -8,13 +8,16 @@ export async function analyzeCode(code: string, language: string, cwd?: string):
         try {
             const eslint = new ESLint({
                 cwd: cwd || process.cwd(), // 使用提供的工作目录或当前目录
-                // 移除不再支持的useEslintrc选项
                 overrideConfig: {
                     rules: {
                         'no-unused-vars': 'warn',
                         'no-undef': 'error',
                         'semi': ['error', 'always'],
-                        'quotes': ['error', 'single']
+                        'quotes': ['error', 'single'],
+                        'no-console': 'warn',
+                        'no-empty': 'error',
+                        'curly': ['error', 'all'],
+                        'eqeqeq': ['error', 'always']
                     }
                 }
             });
