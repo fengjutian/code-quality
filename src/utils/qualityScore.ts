@@ -41,6 +41,14 @@ export function calculateQualityScore(diagnostics: vscode.Diagnostic[], codeText
             commentScore,
             duplicateScore,
             testScore
+        },
+        // Return details for issue reporting
+        details: {
+            lineCount: lines,
+            functionCount,
+            commentLines,
+            duplicateCount,
+            diagnosticsCount: diagnostics.length
         }
     };
 }

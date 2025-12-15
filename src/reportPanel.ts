@@ -16,6 +16,13 @@ interface CodeQualityScore {
     duplicateScore: number;
     testScore: number;
   };
+  details?: {
+    lineCount: number;
+    functionCount: number;
+    commentLines: number;
+    duplicateCount: number;
+    diagnosticsCount: number;
+  };
 }
 
 export function showQualityReport(
@@ -38,13 +45,25 @@ export function showQualityReport(
   // 向 Webview 注入 VSCode API 用于消息通信
   const issueItems = issues
     .map(
-      (i, idx) => `
-      <li class="issue ${i.severity === 2 ? 'error' : 'warning'}" data-index="${idx}">
-        <span class="line">Line ${i.line}:</span>
-        <span class="message">${i.message}</span>
-        <span class="file">${i.filePath.split('/').pop()?.split('\\').pop()}</span>
-      </li>
-    `
+      (i, idx) => {
+        // Determine issue type based on message content
+        const isEslintIssue = !i.message.includes('文件行数过多') && 
+                             !i.message.includes('函数数量过多') && 
+                             !i.message.includes('注释比例过低') && 
+                             !i.message.includes('检测到重复代码') && 
+                             !i.message.includes('测试覆盖率不足');
+        const issueType = isEslintIssue ? 'ESLint' : '代码质量';
+        const issueClass = isEslintIssue ? 'eslint-issue' : 'quality-issue';
+        
+        return `
+        <li class="issue ${i.severity === 2 ? 'error' : 'warning'}" data-index="${idx}">
+          <span class="line">Line ${i.line}:</span>
+          <span class="message">${i.message}</span>
+          <span class="issue-type ${issueClass}">${issueType}</span>
+          <span class="file">${i.filePath.split('/').pop()?.split('\\').pop()}</span>
+        </li>
+      `;
+      }
     )
     .join('');
 
@@ -72,6 +91,9 @@ export function showQualityReport(
         .message { color:#ffffff; display:block; margin:5px 0; }
         .file { color:#9cdcfe; font-size:0.9em; }
         h2 { margin-top: 30px; border-bottom: 1px solid #444; padding-bottom: 10px; }
+        .issue-type { font-size: 0.8em; padding: 2px 6px; border-radius: 3px; margin-left: 10px; }
+        .eslint-issue { background: #81c784; color: #000; }
+        .quality-issue { background: #4fc3f7; color: #000; }
       </style>
     </head>
     <body>
