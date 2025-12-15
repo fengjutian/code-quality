@@ -77,33 +77,35 @@ function activate(context) {
                         filePath: editor.document.fileName
                     });
                 }
-                // 如果重复代码过多，添加警告 - show first duplicate line
+                // 如果重复代码过多，添加警告 - show all duplicate lines
                 if (duplicateCount > 0) {
-                    // Find first duplicate line
+                    // Find all duplicate lines
                     const linesCountMap = {};
                     const codeLines = editor.document.getText().split('\n');
-                    let firstDuplicateLine = 1;
+                    const duplicateIssues = [];
                     for (let i = 0; i < codeLines.length; i++) {
                         const trimmed = codeLines[i].trim();
                         if (!trimmed)
                             continue;
                         if (!linesCountMap[trimmed]) {
-                            linesCountMap[trimmed] = { count: 1, line: i + 1 };
+                            linesCountMap[trimmed] = { count: 1, lines: [i + 1] };
                         }
                         else {
                             linesCountMap[trimmed].count++;
+                            linesCountMap[trimmed].lines.push(i + 1);
+                            // Add issue for each duplicate line after the third occurrence
                             if (linesCountMap[trimmed].count > 3) {
-                                firstDuplicateLine = linesCountMap[trimmed].line;
-                                break;
+                                duplicateIssues.push({
+                                    message: `检测到重复代码: "${trimmed.substring(0, 30)}${trimmed.length > 30 ? '...' : ''}"`,
+                                    line: i + 1,
+                                    severity: 1, // warning
+                                    filePath: editor.document.fileName
+                                });
                             }
                         }
                     }
-                    issues.push({
-                        message: `检测到重复代码 (${duplicateCount} 处)，建议优化`,
-                        line: firstDuplicateLine,
-                        severity: 1, // warning
-                        filePath: editor.document.fileName
-                    });
+                    // Add all duplicate issues
+                    issues.push(...duplicateIssues);
                 }
                 // 如果测试分数较低，添加警告
                 if (qualityScore.breakdown.testScore < 70) {
@@ -200,33 +202,35 @@ function activate(context) {
                                 filePath: result.filePath
                             });
                         }
-                        // 如果重复代码过多，添加警告 - show first duplicate line
+                        // 如果重复代码过多，添加警告 - show all duplicate lines
                         if (duplicateCount > 0) {
-                            // Find first duplicate line
+                            // Find all duplicate lines
                             const linesCountMap = {};
                             const codeLines = result.codeText.split('\n');
-                            let firstDuplicateLine = 1;
+                            const duplicateIssues = [];
                             for (let i = 0; i < codeLines.length; i++) {
                                 const trimmed = codeLines[i].trim();
                                 if (!trimmed)
                                     continue;
                                 if (!linesCountMap[trimmed]) {
-                                    linesCountMap[trimmed] = { count: 1, line: i + 1 };
+                                    linesCountMap[trimmed] = { count: 1, lines: [i + 1] };
                                 }
                                 else {
                                     linesCountMap[trimmed].count++;
+                                    linesCountMap[trimmed].lines.push(i + 1);
+                                    // Add issue for each duplicate line after the third occurrence
                                     if (linesCountMap[trimmed].count > 3) {
-                                        firstDuplicateLine = linesCountMap[trimmed].line;
-                                        break;
+                                        duplicateIssues.push({
+                                            message: `检测到重复代码: "${trimmed.substring(0, 30)}${trimmed.length > 30 ? '...' : ''}"`,
+                                            line: i + 1,
+                                            severity: 1, // warning
+                                            filePath: result.filePath
+                                        });
                                     }
                                 }
                             }
-                            fileIssues.push({
-                                message: `检测到重复代码 (${duplicateCount} 处)，建议优化`,
-                                line: firstDuplicateLine,
-                                severity: 1, // warning
-                                filePath: result.filePath
-                            });
+                            // Add all duplicate issues
+                            fileIssues.push(...duplicateIssues);
                         }
                         // 如果测试分数较低，添加警告
                         if (fileQualityScore.breakdown.testScore < 70) {
