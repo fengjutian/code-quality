@@ -6,33 +6,34 @@ const vscode = require("vscode");
 const eslint_1 = require("eslint");
 const fs = require("fs");
 const path = require("path");
-async function analyzeCode(code, language, cwd) {
+async function analyzeCode(code, language, cwd, fileName) {
     const diagnostics = [];
     if (language === 'javascript' || language === 'typescript') {
         try {
             const eslint = new eslint_1.ESLint({
                 cwd: cwd || process.cwd(), // 使用提供的工作目录或当前目录
-                overrideConfig: [
-                    {
-                        files: ['*.js', '*.ts'],
-                        languageOptions: {
-                            ecmaVersion: 'latest',
-                            sourceType: 'module'
-                        },
-                        rules: {
-                            'no-unused-vars': 'warn',
-                            'no-undef': 'error',
-                            'semi': ['error', 'always'],
-                            'quotes': ['error', 'single'],
-                            'no-console': 'warn',
-                            'no-empty': 'error',
-                            'curly': ['error', 'all'],
-                            'eqeqeq': ['error', 'always']
-                        }
+                overrideConfig: {
+                    files: ['*.js', '*.ts'],
+                    languageOptions: {
+                        ecmaVersion: 'latest',
+                        sourceType: 'module'
+                    },
+                    rules: {
+                        'no-unused-vars': 'warn',
+                        'no-undef': 'error',
+                        'semi': ['error', 'always'],
+                        'quotes': ['error', 'single'],
+                        'no-console': 'warn',
+                        'no-empty': 'error',
+                        'curly': ['error', 'all'],
+                        'eqeqeq': ['error', 'always']
                     }
-                ]
+                }
             });
-            const results = await eslint.lintText(code);
+            // 提供文件名信息，以便ESLint正确应用规则
+            const results = await eslint.lintText(code, {
+                filePath: fileName || `test.${language}`
+            });
             results.forEach(result => {
                 result.messages.forEach(msg => {
                     const range = new vscode.Range(new vscode.Position(msg.line - 1, msg.column - 1), new vscode.Position(msg.endLine ? msg.endLine - 1 : msg.line - 1, msg.endColumn ? msg.endColumn - 1 : msg.column));

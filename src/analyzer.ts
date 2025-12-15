@@ -3,35 +3,36 @@ import { ESLint } from 'eslint';
 import * as fs from 'fs';
 import * as path from 'path';
 
-export async function analyzeCode(code: string, language: string, cwd?: string): Promise<vscode.Diagnostic[]> {
+export async function analyzeCode(code: string, language: string, cwd?: string, fileName?: string): Promise<vscode.Diagnostic[]> {
     const diagnostics: vscode.Diagnostic[] = [];
 
     if (language === 'javascript' || language === 'typescript') {
         try {
             const eslint = new ESLint({
                 cwd: cwd || process.cwd(), // 使用提供的工作目录或当前目录
-                overrideConfig: [
-                    {
-                        files: ['*.js', '*.ts'],
-                        languageOptions: {
-                            ecmaVersion: 'latest',
-                            sourceType: 'module'
-                        },
-                        rules: {
-                            'no-unused-vars': 'warn',
-                            'no-undef': 'error',
-                            'semi': ['error', 'always'],
-                            'quotes': ['error', 'single'],
-                            'no-console': 'warn',
-                            'no-empty': 'error',
-                            'curly': ['error', 'all'],
-                            'eqeqeq': ['error', 'always']
-                        }
+                overrideConfig: {
+                    files: ['*.js', '*.ts'],
+                    languageOptions: {
+                        ecmaVersion: 'latest',
+                        sourceType: 'module'
+                    },
+                    rules: {
+                        'no-unused-vars': 'warn',
+                        'no-undef': 'error',
+                        'semi': ['error', 'always'],
+                        'quotes': ['error', 'single'],
+                        'no-console': 'warn',
+                        'no-empty': 'error',
+                        'curly': ['error', 'all'],
+                        'eqeqeq': ['error', 'always']
                     }
-                ]
+                }
             });
             
-            const results = await eslint.lintText(code);
+            // 提供文件名信息，以便ESLint正确应用规则
+            const results = await eslint.lintText(code, {
+                filePath: fileName || `test.${language}`
+            });
 
             results.forEach(result => {
                 result.messages.forEach(msg => {

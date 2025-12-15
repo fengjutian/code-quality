@@ -13,7 +13,8 @@ function activate(context) {
         // 获取当前工作区根目录
         const workspaceFolder = vscode.workspace.getWorkspaceFolder(document.uri);
         const cwd = workspaceFolder ? workspaceFolder.uri.fsPath : undefined;
-        const diagnostics = await (0, analyzer_1.analyzeCode)(document.getText(), document.languageId, cwd);
+        // 传递文件名参数
+        const diagnostics = await (0, analyzer_1.analyzeCode)(document.getText(), document.languageId, cwd, document.fileName);
         diagnosticCollection.set(document.uri, diagnostics);
     });
     // 手动触发命令 - 分析当前文件
@@ -27,8 +28,10 @@ function activate(context) {
             // 获取当前工作区根目录
             const workspaceFolder = vscode.workspace.getWorkspaceFolder(editor.document.uri);
             const cwd = workspaceFolder ? workspaceFolder.uri.fsPath : undefined;
-            const diagnostics = await (0, analyzer_1.analyzeCode)(editor.document.getText(), editor.document.languageId, cwd);
+            // 传递文件名参数
+            const diagnostics = await (0, analyzer_1.analyzeCode)(editor.document.getText(), editor.document.languageId, cwd, editor.document.fileName);
             diagnosticCollection.set(editor.document.uri, diagnostics);
+            // 得分计算逻辑保持不变
             const score = Math.max(0, 100 - diagnostics.length * 5);
             // 创建符合 CodeQualityScore 接口的对象
             const qualityScore = {
