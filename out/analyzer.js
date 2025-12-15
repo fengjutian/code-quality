@@ -49,56 +49,33 @@ async function analyzeCode(code, language, cwd, fileName) {
     }
     return diagnostics;
 }
-// 分析整个目录的代码质量
-async function analyzeDirectory(directoryPath) {
-    const results = [];
-    // 遍历目录中的所有文件
-    const files = await getJavaScriptTypeScriptFiles(directoryPath);
-    // 创建ESLint实例
-    const eslint = new eslint_1.ESLint({
-        cwd: directoryPath,
-        overrideConfig: [
-            {
-                files: ['*.js', '*.ts'],
-                languageOptions: {
-                    ecmaVersion: 'latest',
-                    sourceType: 'module'
-                },
-                rules: {
-                    'no-unused-vars': 'warn',
-                    'no-undef': 'error',
-                    'semi': ['error', 'always'],
-                    'quotes': ['error', 'single'],
-                    'no-console': 'warn',
-                    'no-empty': 'error',
-                    'curly': ['error', 'all'],
-                    'eqeqeq': ['error', 'always']
-                }
-            }
-        ]
+function getAllFiles(dir, fileList = []) {
+    const files = fs.readdirSync(dir);
+    files.forEach(file => {
+        const fullPath = path.join(dir, file);
+        const stat = fs.statSync(fullPath);
+        if (stat.isDirectory()) {
+            getAllFiles(fullPath, fileList);
+        }
+        else if (/\.(js|ts|jsx|tsx|vue|py|go|cpp)$/.test(file)) {
+            fileList.push(fullPath);
+        }
     });
-    // 分析每个文件
+    return fileList;
+}
+// 分析整个目录的代码质量
+async function analyzeDirectory(rootPath) {
+    const results = [];
+    const files = getAllFiles(rootPath);
     for (const filePath of files) {
-        try {
-            const code = fs.readFileSync(filePath, 'utf-8');
-            const resultsForFile = await eslint.lintText(code, { filePath });
-            const diagnostics = [];
-            resultsForFile.forEach(result => {
-                result.messages.forEach(msg => {
-                    const range = new vscode.Range(new vscode.Position(msg.line - 1, msg.column - 1), new vscode.Position(msg.endLine ? msg.endLine - 1 : msg.line - 1, msg.endColumn ? msg.endColumn - 1 : msg.column));
-                    const severity = msg.severity === 2 ? vscode.DiagnosticSeverity.Error : vscode.DiagnosticSeverity.Warning;
-                    diagnostics.push(new vscode.Diagnostic(range, msg.message, severity));
-                });
-            });
-            results.push({
-                filePath: filePath,
-                diagnostics: diagnostics,
-                codeText: code
-            });
-        }
-        catch (error) {
-            console.error(`分析文件 ${filePath} 时出错:`, error);
-        }
+        const codeText = fs.readFileSync(filePath, 'utf-8');
+        const languageId = path.extname(filePath).slice(1); // 简单获取语言，可根据需要改
+        const diagnostics = await analyzeCode(codeText, languageId, rootPath, filePath);
+        results.push({
+            filePath,
+            diagnostics,
+            codeText
+        });
     }
     return results;
 }

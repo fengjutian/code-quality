@@ -46,7 +46,6 @@ function activate(context) {
             console.error(err);
         }
     });
-    // 分析整个项目
     const projectDisposable = vscode.commands.registerCommand('extension.analyzeProject', async () => {
         try {
             const workspaceFolders = vscode.workspace.workspaceFolders;
@@ -65,13 +64,9 @@ function activate(context) {
                 progress.report({ increment: 50, message: '分析完成，生成报告...' });
                 diagnosticCollection.clear();
                 let allIssues = [];
-                let totalIssues = 0;
                 results.forEach(result => {
                     const uri = vscode.Uri.file(result.filePath);
                     diagnosticCollection.set(uri, result.diagnostics);
-                    totalIssues += result.diagnostics.length;
-                    // 动态计算每个文件质量得分
-                    // const fileQuality = calculateQualityScore(result.diagnostics, result.codeText);
                     const fileIssues = result.diagnostics.map((d) => ({
                         message: d.message,
                         line: d.range.start.line + 1,
@@ -80,14 +75,15 @@ function activate(context) {
                     }));
                     allIssues = allIssues.concat(fileIssues);
                 });
-                // 整体项目得分，可取文件平均
+                // 项目总分 = 文件平均分
                 const totalScore = results.length > 0
                     ? Math.round(results.reduce((sum, r) => sum + (0, qualityScore_1.calculateQualityScore)(r.diagnostics, r.codeText).score, 0) / results.length)
                     : 100;
+                // 整体质量报告（可进一步改为加权平均每个指标）
                 const qualityScore = {
                     score: totalScore,
                     breakdown: {
-                        eslintScore: totalScore, // 可加权平均或取总平均
+                        eslintScore: totalScore,
                         complexityScore: totalScore,
                         commentScore: totalScore,
                         duplicateScore: totalScore,
@@ -96,7 +92,7 @@ function activate(context) {
                 };
                 progress.report({ increment: 100, message: '报告生成完成' });
                 (0, reportPanel_1.showQualityReport)(context, qualityScore, allIssues);
-                vscode.window.showInformationMessage(`项目分析完成！共分析了 ${results.length} 个文件，发现 ${totalIssues} 个问题。`);
+                vscode.window.showInformationMessage(`项目分析完成！共分析了 ${results.length} 个文件，发现 ${allIssues.length} 个问题。`);
             });
         }
         catch (err) {
