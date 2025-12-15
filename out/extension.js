@@ -82,6 +82,7 @@ function activate(context) {
                     }));
                     allIssues = allIssues.concat(fileIssues);
                 });
+                console.log('All Issues:', allIssues);
                 // 项目总分 = 文件平均分
                 const totalScore = results.length > 0
                     ? Math.round(results.reduce((sum, r) => sum + (0, qualityScore_1.calculateQualityScore)(r.diagnostics, r.codeText).score, 0) / results.length)
@@ -106,6 +107,18 @@ function activate(context) {
             const errorMessage = err instanceof Error ? err.message : '未知错误';
             vscode.window.showErrorMessage(`Analyze Code Quality 出错: ${errorMessage}`);
             console.error(err);
+            // 显示错误信息到输出面板
+            const outputChannel = vscode.window.createOutputChannel("Code Quality Analysis");
+            outputChannel.appendLine(`Project analysis failed: ${errorMessage}`);
+            outputChannel.show();
+            // 创建一个临时诊断集合来显示错误
+            const errorDiagnostic = new vscode.Diagnostic(new vscode.Range(new vscode.Position(0, 0), new vscode.Position(0, 0)), `项目代码分析失败: ${errorMessage}`, vscode.DiagnosticSeverity.Error);
+            // 清除之前的诊断并显示错误
+            diagnosticCollection.clear();
+            const editor = vscode.window.activeTextEditor;
+            if (editor) {
+                diagnosticCollection.set(editor.document.uri, [errorDiagnostic]);
+            }
         }
     });
     context.subscriptions.push(disposable);
