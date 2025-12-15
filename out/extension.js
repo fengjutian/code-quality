@@ -30,10 +30,25 @@ function activate(context) {
             const diagnostics = await (0, analyzer_1.analyzeCode)(editor.document.getText(), editor.document.languageId, cwd);
             diagnosticCollection.set(editor.document.uri, diagnostics);
             const score = Math.max(0, 100 - diagnostics.length * 5);
-            (0, reportPanel_1.showQualityReport)(context, score, diagnostics.map((d) => ({
+            // 创建符合 CodeQualityScore 接口的对象
+            const qualityScore = {
+                score: score,
+                breakdown: {
+                    eslintScore: score, // 目前只使用 ESLint 评分
+                    complexityScore: 100, // 默认值
+                    commentScore: 100, // 默认值
+                    duplicateScore: 100, // 默认值
+                    testScore: 100 // 默认值
+                }
+            };
+            // 创建符合 Issue 接口的问题列表
+            const issues = diagnostics.map((d) => ({
                 message: d.message,
-                line: d.range.start.line + 1
-            })));
+                line: d.range.start.line + 1,
+                severity: d.severity === vscode.DiagnosticSeverity.Error ? 2 : 1,
+                filePath: editor.document.fileName
+            }));
+            (0, reportPanel_1.showQualityReport)(context, qualityScore, issues);
             vscode.window.showInformationMessage('代码分析完成！');
         }
         catch (err) {
