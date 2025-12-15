@@ -8,7 +8,11 @@ export function activate(context: vscode.ExtensionContext) {
 
     // 文件保存时触发分析
     vscode.workspace.onDidSaveTextDocument(async (document) => {
-        const diagnostics = await analyzeCode(document.getText(), document.languageId);
+        // 获取当前工作区根目录
+        const workspaceFolder = vscode.workspace.getWorkspaceFolder(document.uri);
+        const cwd = workspaceFolder ? workspaceFolder.uri.fsPath : undefined;
+        
+        const diagnostics = await analyzeCode(document.getText(), document.languageId, cwd);
         diagnosticCollection.set(document.uri, diagnostics);
     });
 
@@ -21,7 +25,11 @@ export function activate(context: vscode.ExtensionContext) {
               return;
           }
 
-          const diagnostics = await analyzeCode(editor.document.getText(), editor.document.languageId);
+          // 获取当前工作区根目录
+          const workspaceFolder = vscode.workspace.getWorkspaceFolder(editor.document.uri);
+          const cwd = workspaceFolder ? workspaceFolder.uri.fsPath : undefined;
+          
+          const diagnostics = await analyzeCode(editor.document.getText(), editor.document.languageId, cwd);
           diagnosticCollection.set(editor.document.uri, diagnostics);
 
           const score = Math.max(0, 100 - diagnostics.length * 5);

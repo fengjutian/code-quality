@@ -10,7 +10,10 @@ function activate(context) {
     context.subscriptions.push(diagnosticCollection);
     // 文件保存时触发分析
     vscode.workspace.onDidSaveTextDocument(async (document) => {
-        const diagnostics = await (0, analyzer_1.analyzeCode)(document.getText(), document.languageId);
+        // 获取当前工作区根目录
+        const workspaceFolder = vscode.workspace.getWorkspaceFolder(document.uri);
+        const cwd = workspaceFolder ? workspaceFolder.uri.fsPath : undefined;
+        const diagnostics = await (0, analyzer_1.analyzeCode)(document.getText(), document.languageId, cwd);
         diagnosticCollection.set(document.uri, diagnostics);
     });
     // 手动触发命令
@@ -21,7 +24,10 @@ function activate(context) {
                 vscode.window.showErrorMessage('没有打开任何文件');
                 return;
             }
-            const diagnostics = await (0, analyzer_1.analyzeCode)(editor.document.getText(), editor.document.languageId);
+            // 获取当前工作区根目录
+            const workspaceFolder = vscode.workspace.getWorkspaceFolder(editor.document.uri);
+            const cwd = workspaceFolder ? workspaceFolder.uri.fsPath : undefined;
+            const diagnostics = await (0, analyzer_1.analyzeCode)(editor.document.getText(), editor.document.languageId, cwd);
             diagnosticCollection.set(editor.document.uri, diagnostics);
             const score = Math.max(0, 100 - diagnostics.length * 5);
             (0, reportPanel_1.showQualityReport)(context, score, diagnostics.map((d) => ({
