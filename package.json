@@ -35,7 +35,11 @@
     "commands": [
       {
         "command": "extension.analyzeCode",
-        "title": "TT Analyze Code Quality"
+        "title": "TT Analyze Code Quality (当前文件)"
+      },
+      {
+        "command": "extension.analyzeProject",
+        "title": "TT Analyze Code Quality (整个项目)"
       }
     ]
   }
