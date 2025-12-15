@@ -44,6 +44,13 @@ function activate(context) {
             const errorMessage = err instanceof Error ? err.message : '未知错误';
             vscode.window.showErrorMessage(`Analyze Code Quality 出错: ${errorMessage}`);
             console.error(err);
+            // 创建一个临时诊断集合来显示错误
+            const errorDiagnostic = new vscode.Diagnostic(new vscode.Range(new vscode.Position(0, 0), new vscode.Position(0, 0)), `代码分析失败: ${errorMessage}`, vscode.DiagnosticSeverity.Error);
+            // 如果有活动编辑器，将错误显示在当前文件中
+            const editor = vscode.window.activeTextEditor;
+            if (editor) {
+                diagnosticCollection.set(editor.document.uri, [errorDiagnostic]);
+            }
         }
     });
     const projectDisposable = vscode.commands.registerCommand('extension.analyzeProject', async () => {

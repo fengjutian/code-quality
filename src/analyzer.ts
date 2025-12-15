@@ -46,7 +46,10 @@ export async function analyzeCode(code: string, language: string, cwd?: string, 
             });
         } catch (error) {
             console.error('ESLint分析错误:', error);
-            // 发生错误时返回空诊断数组
+            // 创建一个诊断对象来显示错误
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            const range = new vscode.Range(new vscode.Position(0, 0), new vscode.Position(0, 0));
+            diagnostics.push(new vscode.Diagnostic(range, `ESLint分析失败: ${errorMessage}`, vscode.DiagnosticSeverity.Error));
         }
     }
 
@@ -95,31 +98,4 @@ export async function analyzeDirectory(rootPath: string): Promise<FileAnalysisRe
     }
 
     return results;
-}
-
-// 获取目录中的所有JavaScript和TypeScript文件
-async function getJavaScriptTypeScriptFiles(directoryPath: string): Promise<string[]> {
-    const files: string[] = [];
-    
-    async function traverse(dir: string) {
-        const entries = fs.readdirSync(dir, { withFileTypes: true });
-        
-        for (const entry of entries) {
-            const fullPath = path.join(dir, entry.name);
-
-            // 忽略node_modules和.git目录
-            if (entry.name === 'node_modules' || entry.name === '.git' || entry.name === 'out' || entry.name === 'dist') {
-                continue;
-            }
-
-            if (entry.isDirectory()) {
-                await traverse(fullPath);
-            } else if (entry.isFile() && (entry.name.endsWith('.js') || entry.name.endsWith('.ts'))) {
-                files.push(fullPath);
-            }
-        }
-    }
-
-    await traverse(directoryPath);
-    return files;
 }
