@@ -42,6 +42,7 @@ export function activate(context: vscode.ExtensionContext) {
                 filePath: editor.document.fileName
             }));
 
+            console.log('Displaying issues:', issues); // Debug log
             showQualityReport(context, qualityScore, issues);
             vscode.window.showInformationMessage('代码分析完成！');
 
@@ -105,6 +106,9 @@ export function activate(context: vscode.ExtensionContext) {
               });
 
               console.log('All Issues:', allIssues);
+
+              // Add debug log
+              console.log('Displaying project issues:', allIssues); // Debug log
 
               // 项目总分 = 文件平均分
               const totalScore = results.length > 0

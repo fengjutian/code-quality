@@ -23,6 +23,8 @@ export function showQualityReport(
   qualityScore: CodeQualityScore,
   issues: Issue[]
 ) {
+  console.log('Showing report with issues:', issues); // Debug log
+  
   const panel = vscode.window.createWebviewPanel(
     'codeQualityReport',
     '代码质量报告',
@@ -40,7 +42,7 @@ export function showQualityReport(
       <li class="issue ${i.severity === 2 ? 'error' : 'warning'}" data-index="${idx}">
         <span class="line">Line ${i.line}:</span>
         <span class="message">${i.message}</span>
-        <span class="file">${i.filePath}</span>
+        <span class="file">${i.filePath.split('/').pop()?.split('\\').pop()}</span>
       </li>
     `
     )
@@ -62,13 +64,14 @@ export function showQualityReport(
         .breakdown { display:flex; gap:15px; margin-bottom:20px; }
         .breakdown div { background:#2d2d2d; padding:10px 12px; border-radius:6px; flex:1; text-align:center; }
         ul { list-style:none; padding:0; }
-        .issue { padding:8px 12px; margin-bottom:8px; border-left:4px solid #ff9800; border-radius:4px; cursor:pointer; transition: transform 0.2s; }
-        .issue.error { border-left-color:#f44336; }
-        .issue.warning { border-left-color:#ff9800; }
+        .issue { padding:12px 15px; margin-bottom:10px; border-left:4px solid #ff9800; border-radius:4px; cursor:pointer; transition: transform 0.2s; background:#2d2d2d; }
+        .issue.error { border-left-color:#f44336; background:#3a2d2d; }
+        .issue.warning { border-left-color:#ff9800; background:#3a352d; }
         .issue:hover { transform:scale(1.02); }
-        .line { font-weight:bold; margin-right:6px; }
-        .message { color:#ffffff; }
-        .file { color:#9cdcfe; margin-left:8px; }
+        .line { font-weight:bold; margin-right:10px; color:#9cdcfe; }
+        .message { color:#ffffff; display:block; margin:5px 0; }
+        .file { color:#9cdcfe; font-size:0.9em; }
+        h2 { margin-top: 30px; border-bottom: 1px solid #444; padding-bottom: 10px; }
       </style>
     </head>
     <body>
@@ -81,9 +84,9 @@ export function showQualityReport(
         <div>重复率: ${breakdown.duplicateScore}</div>
         <div>测试: ${breakdown.testScore}</div>
       </div>
-      <h2>代码问题列表</h2>
+      <h2>代码问题列表 (${issues.length} 个问题)</h2>
       <ul id="issue-list">
-        ${issueItems}
+        ${issueItems || '<li>No issues found</li>'}
       </ul>
 
       <script>

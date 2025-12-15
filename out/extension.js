@@ -37,6 +37,7 @@ function activate(context) {
                 severity: d.severity === vscode.DiagnosticSeverity.Error ? 2 : 1,
                 filePath: editor.document.fileName
             }));
+            console.log('Displaying issues:', issues); // Debug log
             (0, reportPanel_1.showQualityReport)(context, qualityScore, issues);
             vscode.window.showInformationMessage('代码分析完成！');
         }
@@ -83,6 +84,8 @@ function activate(context) {
                     allIssues = allIssues.concat(fileIssues);
                 });
                 console.log('All Issues:', allIssues);
+                // Add debug log
+                console.log('Displaying project issues:', allIssues); // Debug log
                 // 项目总分 = 文件平均分
                 const totalScore = results.length > 0
                     ? Math.round(results.reduce((sum, r) => sum + (0, qualityScore_1.calculateQualityScore)(r.diagnostics, r.codeText).score, 0) / results.length)
