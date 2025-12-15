@@ -57,6 +57,7 @@ export async function analyzeCode(code: string, language: string, cwd?: string, 
 export interface FileAnalysisResult {
     filePath: string;
     diagnostics: vscode.Diagnostic[];
+    codeText: string;
 }
 
 // 分析整个目录的代码质量
@@ -110,7 +111,8 @@ export async function analyzeDirectory(directoryPath: string): Promise<FileAnaly
             
             results.push({
                 filePath: filePath,
-                diagnostics: diagnostics
+                diagnostics: diagnostics,
+                codeText: code
             });
         } catch (error) {
             console.error(`分析文件 ${filePath} 时出错:`, error);

@@ -92,7 +92,8 @@ async function analyzeDirectory(directoryPath) {
             });
             results.push({
                 filePath: filePath,
-                diagnostics: diagnostics
+                diagnostics: diagnostics,
+                codeText: code
             });
         }
         catch (error) {
