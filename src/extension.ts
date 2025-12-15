@@ -1,6 +1,6 @@
 // extension.ts
 import * as vscode from 'vscode';
-import { analyzeCode, analyzeDirectory, FileAnalysisResult } from './analyzer';
+import { analyzeCode, analyzeDirectory } from './analyzer';
 import { showQualityReport } from './reportPanel';
 import { calculateQualityScore } from './utils/qualityScore';
 

@@ -59,6 +59,9 @@ function getAllFiles(dir: string, fileList: string[] = []): string[] {
         const fullPath = path.join(dir, file);
         const stat = fs.statSync(fullPath);
         if (stat.isDirectory()) {
+           if (file === 'node_modules' || file === '.git' || file === 'out' || file === 'dist') {
+              return;
+            }
             getAllFiles(fullPath, fileList);
         } else if (/\.(js|ts|jsx|tsx|vue|py|go|cpp)$/.test(file)) {
             fileList.push(fullPath);
@@ -103,12 +106,12 @@ async function getJavaScriptTypeScriptFiles(directoryPath: string): Promise<stri
         
         for (const entry of entries) {
             const fullPath = path.join(dir, entry.name);
-            
+
             // 忽略node_modules和.git目录
             if (entry.name === 'node_modules' || entry.name === '.git' || entry.name === 'out' || entry.name === 'dist') {
                 continue;
             }
-            
+
             if (entry.isDirectory()) {
                 await traverse(fullPath);
             } else if (entry.isFile() && (entry.name.endsWith('.js') || entry.name.endsWith('.ts'))) {
@@ -116,7 +119,7 @@ async function getJavaScriptTypeScriptFiles(directoryPath: string): Promise<stri
             }
         }
     }
-    
+
     await traverse(directoryPath);
     return files;
 }

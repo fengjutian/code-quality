@@ -55,6 +55,9 @@ function getAllFiles(dir, fileList = []) {
         const fullPath = path.join(dir, file);
         const stat = fs.statSync(fullPath);
         if (stat.isDirectory()) {
+            if (file === 'node_modules' || file === '.git' || file === 'out' || file === 'dist') {
+                return;
+            }
             getAllFiles(fullPath, fileList);
         }
         else if (/\.(js|ts|jsx|tsx|vue|py|go|cpp)$/.test(file)) {
