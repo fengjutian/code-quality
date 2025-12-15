@@ -34,17 +34,13 @@ function activate(context) {
                 vscode.window.showErrorMessage('没有打开任何文件');
                 return;
             }
-            const issues = await AnalysisManager.analyze(editor.document.getText(), editor.document.languageId, editor.document.fileName);
-            const diagnostics = issues.map(i => {
-                const range = new vscode.Range(i.line - 1, i.column ? i.column - 1 : 0, i.line - 1, i.column ? i.column : 0);
-                const severity = i.severity === 'error' ? vscode.DiagnosticSeverity.Error :
-                    i.severity === 'warning' ? vscode.DiagnosticSeverity.Warning :
-                        vscode.DiagnosticSeverity.Information;
-                return new vscode.Diagnostic(range, i.message, severity);
-            });
+            const diagnostics = await (0, analyzer_1.analyzeCode)(editor.document.getText(), editor.document.languageId);
             diagnosticCollection.set(editor.document.uri, diagnostics);
             const score = Math.max(0, 100 - diagnostics.length * 5);
-            (0, reportPanel_1.showQualityReport)(context, score, issues);
+            (0, reportPanel_1.showQualityReport)(context, score, diagnostics.map(d => ({
+                message: d.message,
+                line: d.range.start.line + 1
+            })));
             vscode.window.showInformationMessage('代码分析完成！');
         }
         catch (err) {
