@@ -3,31 +3,40 @@
   "displayName": "VSCode Code Quality",
   "description": "VSCode plugin to analyze code quality",
   "version": "0.0.1",
+  "type": "module",
   "engines": {
     "vscode": "^1.80.0"
   },
-  "categories": ["Other"],
+  "categories": [
+    "Other"
+  ],
   "activationEvents": [
     "onCommand:extension.analyzeCode",
     "onSaveTextDocument"
   ],
   "main": "./out/extension.js",
   "scripts": {
+    "lint": "eslint 'src/**/*.{ts,tsx}' --fix",
     "vscode:prepublish": "tsc -p ./",
     "compile": "tsc -watch -p ./",
     "postinstall": "echo \"Postinstall completed\""
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.2",
     "@types/node": "^25.0.2",
     "@types/vscode": "^1.80.0",
+    "@typescript-eslint/eslint-plugin": "^8.49.0",
+    "@typescript-eslint/parser": "^8.49.0",
     "eslint": "^9.39.2",
-    "typescript": "^5.9.3"
+    "globals": "^16.5.0",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.49.0"
   },
   "contributes": {
     "commands": [
       {
         "command": "extension.analyzeCode",
-        "title": "Analyze Code Quality"
+        "title": "TT Analyze Code Quality"
       }
     ]
   }

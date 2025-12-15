@@ -14,19 +14,6 @@ function activate(context) {
         diagnosticCollection.set(document.uri, diagnostics);
     });
     // 手动触发命令
-    // const disposable = vscode.commands.registerCommand('extension.analyzeCode', async () => {
-    //     const editor = vscode.window.activeTextEditor;
-    //     if (!editor) return;
-    //     const diagnostics = await analyzeCode(editor.document.getText(), editor.document.languageId);
-    //     diagnosticCollection.set(editor.document.uri, diagnostics);
-    //     // 生成评分和报告
-    //     const score = Math.max(0, 100 - diagnostics.length * 5); // 简单评分算法
-    //     showQualityReport(context, score, diagnostics.map(d => ({
-    //         message: d.message,
-    //         line: d.range.start.line + 1
-    //     })));
-    //     vscode.window.showInformationMessage('代码分析完成！');
-    // });
     const disposable = vscode.commands.registerCommand('extension.analyzeCode', async () => {
         try {
             const editor = vscode.window.activeTextEditor;
@@ -37,14 +24,15 @@ function activate(context) {
             const diagnostics = await (0, analyzer_1.analyzeCode)(editor.document.getText(), editor.document.languageId);
             diagnosticCollection.set(editor.document.uri, diagnostics);
             const score = Math.max(0, 100 - diagnostics.length * 5);
-            (0, reportPanel_1.showQualityReport)(context, score, diagnostics.map(d => ({
+            (0, reportPanel_1.showQualityReport)(context, score, diagnostics.map((d) => ({
                 message: d.message,
                 line: d.range.start.line + 1
             })));
             vscode.window.showInformationMessage('代码分析完成！');
         }
         catch (err) {
-            vscode.window.showErrorMessage(`Analyze Code Quality 出错: ${err.message}`);
+            const errorMessage = err instanceof Error ? err.message : '未知错误';
+            vscode.window.showErrorMessage(`Analyze Code Quality 出错: ${errorMessage}`);
             console.error(err);
         }
     });
