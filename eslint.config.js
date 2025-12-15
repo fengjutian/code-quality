@@ -1,20 +1,29 @@
-module.exports = {
-  parser: '@typescript-eslint/parser',
-  parserOptions: {
-    ecmaVersion: 2025,
-    sourceType: 'module',
-  },
-  plugins: ['@typescript-eslint'],
-  extends: [
-    'eslint:recommended',
-    'plugin:@typescript-eslint/recommended',
-  ],
-  rules: {
-    '@typescript-eslint/no-unused-vars': ['warn'],
-    '@typescript-eslint/explicit-function-return-type': 'off',
-  },
-  env: {
-    browser: true,
-    node: true,
-  },
-};
+const globals = require('globals');
+const pluginJs = require('@eslint/js');
+const tseslint = require('typescript-eslint');
+
+module.exports = tseslint.config(
+  {
+    files: ['**/*.js', '**/*.ts'],
+    languageOptions: {
+      parser: tseslint.parser,
+      parserOptions: {
+        ecmaVersion: 'latest',
+        sourceType: 'module',
+      },
+      globals: {
+        ...globals.browser,
+        ...globals.node,
+      },
+    },
+    plugins: {
+      '@typescript-eslint': tseslint.plugin,
+    },
+    rules: {
+      ...pluginJs.configs.recommended.rules,
+      ...tseslint.configs.recommended.rules,
+      '@typescript-eslint/no-unused-vars': ['warn'],
+      '@typescript-eslint/explicit-function-return-type': 'off',
+    },
+  }
+);

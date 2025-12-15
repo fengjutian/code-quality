@@ -9,18 +9,25 @@ async function analyzeCode(code, language, cwd) {
         try {
             const eslint = new eslint_1.ESLint({
                 cwd: cwd || process.cwd(), // 使用提供的工作目录或当前目录
-                overrideConfig: {
-                    rules: {
-                        'no-unused-vars': 'warn',
-                        'no-undef': 'error',
-                        'semi': ['error', 'always'],
-                        'quotes': ['error', 'single'],
-                        'no-console': 'warn',
-                        'no-empty': 'error',
-                        'curly': ['error', 'all'],
-                        'eqeqeq': ['error', 'always']
+                overrideConfig: [
+                    {
+                        files: ['*.js', '*.ts'],
+                        languageOptions: {
+                            ecmaVersion: 'latest',
+                            sourceType: 'module'
+                        },
+                        rules: {
+                            'no-unused-vars': 'warn',
+                            'no-undef': 'error',
+                            'semi': ['error', 'always'],
+                            'quotes': ['error', 'single'],
+                            'no-console': 'warn',
+                            'no-empty': 'error',
+                            'curly': ['error', 'all'],
+                            'eqeqeq': ['error', 'always']
+                        }
                     }
-                }
+                ]
             });
             const results = await eslint.lintText(code);
             results.forEach(result => {
