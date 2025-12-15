@@ -40,6 +40,7 @@ export function showQualityReport(
       <li class="issue ${i.severity === 2 ? 'error' : 'warning'}" data-index="${idx}">
         <span class="line">Line ${i.line}:</span>
         <span class="message">${i.message}</span>
+        <span class="file">${i.filePath}</span>
       </li>
     `
     )
@@ -67,6 +68,7 @@ export function showQualityReport(
         .issue:hover { transform:scale(1.02); }
         .line { font-weight:bold; margin-right:6px; }
         .message { color:#ffffff; }
+        .file { color:#9cdcfe; margin-left:8px; }
       </style>
     </head>
     <body>
