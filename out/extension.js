@@ -44,21 +44,30 @@ function activate(context) {
                 if (lineCount > 200) {
                     issues.push({
                         message: `文件行数过多 (${lineCount} 行)，建议拆分为多个小文件`,
-                        line: 1,
+                        line: lineCount, // Show last line of file
                         severity: 1, // warning
                         filePath: editor.document.fileName
                     });
                 }
-                // 如果函数数量过多，添加警告
+                // 如果函数数量过多，添加警告 - show first function line
                 if (functionCount > 10) {
+                    // Find first function line
+                    const codeLines = editor.document.getText().split('\n');
+                    let firstFunctionLine = 1;
+                    for (let i = 0; i < codeLines.length; i++) {
+                        if (codeLines[i].includes('function') || codeLines[i].includes('=>')) {
+                            firstFunctionLine = i + 1;
+                            break;
+                        }
+                    }
                     issues.push({
                         message: `函数数量过多 (${functionCount} 个)，建议重构代码`,
-                        line: 1,
+                        line: firstFunctionLine,
                         severity: 1, // warning
                         filePath: editor.document.fileName
                     });
                 }
-                // 如果注释行数过少，添加警告
+                // 如果注释行数过少，添加警告 - show first line
                 const commentRatio = commentLines / lineCount;
                 if (commentRatio < 0.1) {
                     issues.push({
@@ -68,11 +77,30 @@ function activate(context) {
                         filePath: editor.document.fileName
                     });
                 }
-                // 如果重复代码过多，添加警告
+                // 如果重复代码过多，添加警告 - show first duplicate line
                 if (duplicateCount > 0) {
+                    // Find first duplicate line
+                    const linesCountMap = {};
+                    const codeLines = editor.document.getText().split('\n');
+                    let firstDuplicateLine = 1;
+                    for (let i = 0; i < codeLines.length; i++) {
+                        const trimmed = codeLines[i].trim();
+                        if (!trimmed)
+                            continue;
+                        if (!linesCountMap[trimmed]) {
+                            linesCountMap[trimmed] = { count: 1, line: i + 1 };
+                        }
+                        else {
+                            linesCountMap[trimmed].count++;
+                            if (linesCountMap[trimmed].count > 3) {
+                                firstDuplicateLine = linesCountMap[trimmed].line;
+                                break;
+                            }
+                        }
+                    }
                     issues.push({
                         message: `检测到重复代码 (${duplicateCount} 处)，建议优化`,
-                        line: 1,
+                        line: firstDuplicateLine,
                         severity: 1, // warning
                         filePath: editor.document.fileName
                     });
@@ -139,21 +167,30 @@ function activate(context) {
                         if (lineCount > 200) {
                             fileIssues.push({
                                 message: `文件行数过多 (${lineCount} 行)，建议拆分为多个小文件`,
-                                line: 1,
+                                line: lineCount, // Show last line of file
                                 severity: 1, // warning
                                 filePath: result.filePath
                             });
                         }
-                        // 如果函数数量过多，添加警告
+                        // 如果函数数量过多，添加警告 - show first function line
                         if (functionCount > 10) {
+                            // Find first function line
+                            const codeLines = result.codeText.split('\n');
+                            let firstFunctionLine = 1;
+                            for (let i = 0; i < codeLines.length; i++) {
+                                if (codeLines[i].includes('function') || codeLines[i].includes('=>')) {
+                                    firstFunctionLine = i + 1;
+                                    break;
+                                }
+                            }
                             fileIssues.push({
                                 message: `函数数量过多 (${functionCount} 个)，建议重构代码`,
-                                line: 1,
+                                line: firstFunctionLine,
                                 severity: 1, // warning
                                 filePath: result.filePath
                             });
                         }
-                        // 如果注释行数过少，添加警告
+                        // 如果注释行数过少，添加警告 - show first line
                         const commentRatio = commentLines / lineCount;
                         if (commentRatio < 0.1) {
                             fileIssues.push({
@@ -163,11 +200,30 @@ function activate(context) {
                                 filePath: result.filePath
                             });
                         }
-                        // 如果重复代码过多，添加警告
+                        // 如果重复代码过多，添加警告 - show first duplicate line
                         if (duplicateCount > 0) {
+                            // Find first duplicate line
+                            const linesCountMap = {};
+                            const codeLines = result.codeText.split('\n');
+                            let firstDuplicateLine = 1;
+                            for (let i = 0; i < codeLines.length; i++) {
+                                const trimmed = codeLines[i].trim();
+                                if (!trimmed)
+                                    continue;
+                                if (!linesCountMap[trimmed]) {
+                                    linesCountMap[trimmed] = { count: 1, line: i + 1 };
+                                }
+                                else {
+                                    linesCountMap[trimmed].count++;
+                                    if (linesCountMap[trimmed].count > 3) {
+                                        firstDuplicateLine = linesCountMap[trimmed].line;
+                                        break;
+                                    }
+                                }
+                            }
                             fileIssues.push({
                                 message: `检测到重复代码 (${duplicateCount} 处)，建议优化`,
-                                line: 1,
+                                line: firstDuplicateLine,
                                 severity: 1, // warning
                                 filePath: result.filePath
                             });
