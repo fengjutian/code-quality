@@ -42,5 +42,8 @@
         "title": "TT Analyze Code Quality (整个项目)"
       }
     ]
+  },
+  "dependencies": {
+    "openai": "^6.13.0"
   }
 }
