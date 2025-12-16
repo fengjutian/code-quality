@@ -317,7 +317,6 @@ export function detectAnyTypeUsage(code: string): { score: number; issues: strin
 }
 
 // 检查过长行
-// 检查过长行
 export function checkLongLines(code: string): { score: number; issues: string[] } {
     const issues: string[] = [];
     const lines = code.split('\n');

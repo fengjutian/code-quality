@@ -274,7 +274,6 @@ function detectAnyTypeUsage(code) {
     return { score, issues };
 }
 // 检查过长行
-// 检查过长行
 function checkLongLines(code) {
     const issues = [];
     const lines = code.split('\n');
