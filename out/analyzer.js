@@ -6,6 +6,7 @@ const vscode = require("vscode");
 const eslint_1 = require("eslint");
 const fs = require("fs");
 const path = require("path");
+const index_1 = require("./utils/index");
 // 计算圈复杂度
 function calculateCyclomaticComplexity(code) {
     // 简单实现：统计条件语句和循环语句
@@ -415,27 +416,10 @@ async function analyzeCode(code, language, cwd, fileName) {
     }
     return diagnostics;
 }
-function getAllFiles(dir, fileList = []) {
-    const files = fs.readdirSync(dir);
-    files.forEach(file => {
-        const fullPath = path.join(dir, file);
-        const stat = fs.statSync(fullPath);
-        if (stat.isDirectory()) {
-            if (file === 'node_modules' || file === '.git' || file === 'out' || file === 'dist') {
-                return;
-            }
-            getAllFiles(fullPath, fileList);
-        }
-        else if (/(\.js|\.ts|\.jsx|\.tsx|\.vue|\.py|\.go|\.cpp)$/.test(file)) {
-            fileList.push(fullPath);
-        }
-    });
-    return fileList;
-}
 // 分析整个目录的代码质量
 async function analyzeDirectory(rootPath) {
     const results = [];
-    const files = getAllFiles(rootPath);
+    const files = (0, index_1.getAllFiles)(rootPath);
     for (const filePath of files) {
         const codeText = fs.readFileSync(filePath, 'utf-8');
         const languageId = path.extname(filePath).slice(1); // 简单获取语言，可根据需要改

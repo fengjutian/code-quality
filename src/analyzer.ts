@@ -3,6 +3,8 @@ import { ESLint } from 'eslint';
 import * as fs from 'fs';
 import * as path from 'path';
 
+import { getAllFiles } from './utils/index';
+
 // 计算圈复杂度
 function calculateCyclomaticComplexity(code: string): number {
     // 简单实现：统计条件语句和循环语句
@@ -531,23 +533,6 @@ export async function analyzeCode(code: string, language: string, cwd?: string, 
     }
 
     return diagnostics;
-}
-
-function getAllFiles(dir: string, fileList: string[] = []): string[] {
-    const files = fs.readdirSync(dir);
-    files.forEach(file => {
-        const fullPath = path.join(dir, file);
-        const stat = fs.statSync(fullPath);
-        if (stat.isDirectory()) {
-           if (file === 'node_modules' || file === '.git' || file === 'out' || file === 'dist') {
-              return;
-            }
-            getAllFiles(fullPath, fileList);
-        } else if (/(\.js|\.ts|\.jsx|\.tsx|\.vue|\.py|\.go|\.cpp)$/.test(file)) {
-            fileList.push(fullPath);
-        }
-    });
-    return fileList;
 }
 
 // 定义文件分析结果接口

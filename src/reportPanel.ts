@@ -52,11 +52,12 @@ export function showQualityReport(
                              !i.message.includes('注释比例过低') && 
                              !i.message.includes('检测到重复代码') && 
                              !i.message.includes('测试覆盖率不足');
-        const issueType = isEslintIssue ? 'ESLint' : '代码质量';
-        const issueClass = isEslintIssue ? 'eslint-issue' : 'quality-issue';
+        const isAnyTypeIssue = i.message.includes('any类型');
+        const issueType = isAnyTypeIssue ? 'Any类型' : (isEslintIssue ? 'ESLint' : '代码质量');
+        const issueClass = isAnyTypeIssue ? 'any-issue' : (isEslintIssue ? 'eslint-issue' : 'quality-issue');
         
         return `
-        <li class="issue ${i.severity === 2 ? 'error' : 'warning'}" data-index="${idx}">
+        <li class="issue ${i.severity === 2 ? 'error' : 'warning'} ${isAnyTypeIssue ? 'any-type' : ''}" data-index="${idx}">
           <span class="line">Line ${i.line}:</span>
           <span class="message">${i.message}</span>
           <span class="issue-type ${issueClass}">${issueType}</span>
@@ -94,6 +95,9 @@ export function showQualityReport(
         .issue-type { font-size: 0.8em; padding: 2px 6px; border-radius: 3px; margin-left: 10px; }
         .eslint-issue { background: #81c784; color: #000; }
         .quality-issue { background: #4fc3f7; color: #000; }
+        /* Any类型问题特殊样式 */
+        .any-type { border-left-color:#ff00ff; background:#402d40; }
+        .any-issue { background: #ff00ff; color: #000; }
       </style>
     </head>
     <body>
