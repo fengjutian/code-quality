@@ -29,70 +29,61 @@ function checkFunctionCount(functionCount: number, codeText: string, filePath: s
     }];
 }
 
-function checkFunctionLength(codeText: string, filePath: string) {
-    const issues: any[] = [];
-    const lines = codeText.split('\n');
-    const funcRegex = /\bfunction\b|\b=>\b/g;
-    let funcStart = -1;
-
-    lines.forEach((line, idx) => {
-        if (funcRegex.test(line)) {
-            funcStart = idx;
-        } else if (funcStart >= 0 && line.trim() === '') {
-            const length = idx - funcStart;
-            if (length > 50) {
-                issues.push({
-                    message: `函数过长 (${length} 行)，建议拆分`,
-                    line: funcStart + 1,
-                    severity: 1,
-                    filePath
-                });
-            }
-            funcStart = -1;
-        }
-    });
-
-    return issues;
-}
-
 function checkCommentRatio(commentLines: number, lineCount: number, filePath: string) {
     const ratio = commentLines / lineCount;
-    if (ratio >= 0.1) return [];
-    return [{
-        message: `注释比例过低 (${Math.round(ratio * 100)}%)，建议增加注释`,
-        line: 1,
-        severity: 1,
-        filePath
-    }];
+    // Based on new scoring: reasonable range is 5% ~ 25%
+    if (ratio >= 0.05 && ratio <= 0.25) return [];
+    
+    if (ratio < 0.05) {
+        return [{
+            message: `注释比例过低 (${(ratio * 100).toFixed(1)}%)，建议增加注释`,
+            line: 1,
+            severity: 1,
+            filePath
+        }];
+    } else {
+        return [{
+            message: `注释比例过高 (${(ratio * 100).toFixed(1)}%)，建议减少不必要的注释`,
+            line: 1,
+            severity: 1,
+            filePath
+        }];
+    }
 }
 
-function checkDuplicateBlocks(codeText: string, filePath: string, minBlockSize = 3) {
+function checkDuplicateBlocks(codeText: string, filePath: string) {
     const issues: any[] = [];
     const lines = codeText.split('\n');
-    const blockMap = new Map<string, number[]>(); // key = block hash, value = 行号数组
+    const lineCountMap: Record<string, number[]> = {};
 
-    for (let i = 0; i <= lines.length - minBlockSize; i++) {
-        const block = lines.slice(i, i + minBlockSize).map(l => l.trim()).join('\n');
-        if (!block.trim()) continue; // 空块不算
+    // Build map of lines to their line numbers
+    lines.forEach((line, index) => {
+        const trimmedLine = line.trim();
+        // Filter out short and comment lines
+        if (trimmedLine.length < 15 || trimmedLine.startsWith('//') || trimmedLine.startsWith('/*') || trimmedLine.startsWith('*')) {
+            return;
+        }
+        
+        if (!lineCountMap[trimmedLine]) {
+            lineCountMap[trimmedLine] = [];
+        }
+        lineCountMap[trimmedLine].push(index + 1);
+    });
 
-        if (!blockMap.has(block)) {
-            blockMap.set(block, [i + 1]);
-        } else {
-            const occurrences = blockMap.get(block)!;
-            occurrences.push(i + 1);
-
-            // 仅当出现超过1次时才报 issue
-            if (occurrences.length === 2) {
-                // 第一次重复出现
+    // Check for duplicates (4 or more occurrences)
+    Object.entries(lineCountMap).forEach(([lineContent, lineNumbers]) => {
+        if (lineNumbers.length >= 4) {
+            // Report each occurrence after the third
+            for (let i = 3; i < lineNumbers.length; i++) {
                 issues.push({
-                    message: `检测到重复代码块（${minBlockSize}行起）`,
-                    line: i + 1,
+                    message: `检测到重复代码: "${lineContent.substring(0, 30)}${lineContent.length > 30 ? '...' : ''}"`,
+                    line: lineNumbers[i],
                     severity: 1,
                     filePath
                 });
             }
         }
-    }
+    });
 
     return issues;
 }
@@ -109,7 +100,7 @@ function checkTestScore(testScore: number, filePath: string) {
 
 function checkWhitespaceIssues(codeText: string, filePath: string) {
     const issues: any[] = [];
-    const lines = codeText.split('\n');
+    const lines = codeText.split(/\r?\n/);
 
     lines.forEach((line, idx) => {
         if (/\s+$/.test(line)) {
@@ -163,15 +154,14 @@ function generateIssuesFromQualityScore(
     codeText: string,
     filePath: string
 ) {
-    const { lineCount, functionCount, commentLines, duplicateBlocks } = qualityScore.details;
+    const { lineCount, functionCount, commentLines } = qualityScore.details;
     const testScore = qualityScore.breakdown.testScore;
 
     return [
         ...checkLineCount(lineCount, filePath),
         ...checkFunctionCount(functionCount, codeText, filePath),
-        ...checkFunctionLength(codeText, filePath),
         ...checkCommentRatio(commentLines, lineCount, filePath),
-        ...checkDuplicateBlocks(codeText, filePath, duplicateBlocks),
+        ...checkDuplicateBlocks(codeText, filePath),
         ...checkTestScore(testScore, filePath),
         ...checkWhitespaceIssues(codeText, filePath),
         ...checkNamingConvention(codeText, filePath)
@@ -296,25 +286,64 @@ export function activate(context: vscode.ExtensionContext) {
                     allIssues.push(...fileIssues);
                 }
 
-                const totalScore = results.length > 0
-                    ? Math.round(results.reduce((sum, r) => sum + calculateQualityScore(r.diagnostics, r.codeText).score, 0) / results.length)
-                    : 100;
+                // Calculate average scores across all files using the new weighted system
+                if (results.length > 0) {
+                    let totalWeightedScore = 0;
+                    let totalEslintScore = 0;
+                    let totalComplexityScore = 0;
+                    let totalCommentScore = 0;
+                    let totalDuplicateScore = 0;
+                    let totalTestScore = 0;
 
-                const qualityScore = {
-                    score: totalScore,
-                    breakdown: {
-                        eslintScore: totalScore,
-                        complexityScore: totalScore,
-                        commentScore: totalScore,
-                        duplicateScore: totalScore,
-                        testScore: totalScore
-                    }
-                };
+                    results.forEach(result => {
+                        const score = calculateQualityScore(result.diagnostics, result.codeText);
+                        totalWeightedScore += score.score;
+                        totalEslintScore += score.breakdown.eslintScore;
+                        totalComplexityScore += score.breakdown.complexityScore;
+                        totalCommentScore += score.breakdown.commentScore;
+                        totalDuplicateScore += score.breakdown.duplicateScore;
+                        totalTestScore += score.breakdown.testScore;
+                    });
 
-                progress.report({ increment: 100, message: '报告生成完成' });
-                showQualityReport(context, qualityScore, allIssues);
+                    const avgWeightedScore = Math.round(totalWeightedScore / results.length);
+                    const avgEslintScore = Math.round(totalEslintScore / results.length);
+                    const avgComplexityScore = Math.round(totalComplexityScore / results.length);
+                    const avgCommentScore = Math.round(totalCommentScore / results.length);
+                    const avgDuplicateScore = Math.round(totalDuplicateScore / results.length);
+                    const avgTestScore = Math.round(totalTestScore / results.length);
 
-                vscode.window.showInformationMessage(`项目分析完成！共分析了 ${results.length} 个文件，发现 ${allIssues.length} 个问题。`);
+                    const qualityScore = {
+                        score: avgWeightedScore,
+                        breakdown: {
+                            eslintScore: avgEslintScore,
+                            complexityScore: avgComplexityScore,
+                            commentScore: avgCommentScore,
+                            duplicateScore: avgDuplicateScore,
+                            testScore: avgTestScore
+                        }
+                    };
+
+                    progress.report({ increment: 100, message: '报告生成完成' });
+                    showQualityReport(context, qualityScore, allIssues);
+
+                    vscode.window.showInformationMessage(`项目分析完成！共分析了 ${results.length} 个文件，发现 ${allIssues.length} 个问题。`);
+                } else {
+                    // Handle empty project case
+                    const qualityScore = {
+                        score: 100,
+                        breakdown: {
+                            eslintScore: 100,
+                            complexityScore: 100,
+                            commentScore: 100,
+                            duplicateScore: 100,
+                            testScore: 80 // Default test score
+                        }
+                    };
+
+                    progress.report({ increment: 100, message: '报告生成完成' });
+                    showQualityReport(context, qualityScore, allIssues);
+                    vscode.window.showInformationMessage('项目分析完成！未找到可分析的文件。');
+                }
             });
         } catch (err: unknown) {
             handleError(err, diagnosticCollection);

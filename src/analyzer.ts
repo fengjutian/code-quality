@@ -244,14 +244,14 @@ function checkErrorHandling(code: string): { score: number; issues: string[] } {
     // 检查 Promise 是否正确处理错误
     const hasPromise = code.includes('Promise') || code.includes('.then(');
     const hasPromiseCatch = code.includes('.catch(');
-    
+
     if (hasPromise && !hasPromiseCatch && !hasTryCatch) {
         errorHandlingIssues++;
         issues.push('使用了 Promise，但未处理可能的拒绝（reject）');
     }
-    
+
     const score = Math.max(0, 100 - errorHandlingIssues * 25);
-    
+
     return { score, issues };
 }
 
@@ -293,6 +293,34 @@ function checkFunctionParameters(code: string): { score: number; issues: string[
 }
 
 // 检查过长行
+// 检测TypeScript中的any类型使用
+function detectAnyTypeUsage(code: string): { score: number; issues: string[] } {
+    const issues: string[] = [];
+    let score = 100;
+    
+    // 使用正则表达式匹配各种any类型的使用场景
+    const anyTypeRegex = /\bany\b/g;
+    const matches = code.match(anyTypeRegex);
+    
+    if (matches) {
+        const anyCount = matches.length;
+        // 每使用一次any类型，降低5分，最低0分
+        score = Math.max(0, 100 - anyCount * 5);
+        issues.push(`代码中使用了 ${anyCount} 次 any 类型，建议使用更具体的类型定义`);
+        
+        // 标记具体的any使用位置
+        let match;
+        const codeLines = code.split('\n');
+        codeLines.forEach((line, lineNum) => {
+            if (line.includes('any')) {
+                issues.push(`第 ${lineNum + 1} 行使用了any类型`);
+            }
+        });
+    }
+    
+    return { score, issues };
+}
+
 function checkLongLines(code: string): { score: number; issues: string[] } {
     const issues: string[] = [];
     const lines = code.split('\n');
@@ -337,7 +365,8 @@ export async function analyzeCode(code: string, language: string, cwd?: string, 
                         'no-console': 'warn',
                         'no-empty': 'error',
                         'curly': ['error', 'all'],
-                        'eqeqeq': ['error', 'always']
+                        'eqeqeq': ['error', 'always'],
+                        '@typescript-eslint/no-explicit-any': 'error'
                     }
                 }
             });
@@ -485,6 +514,19 @@ export async function analyzeCode(code: string, language: string, cwd?: string, 
                     vscode.DiagnosticSeverity.Warning
                 ));
             });
+        }
+        // 检测any类型使用（仅对TypeScript文件生效）
+        if (language === 'typescript') {
+            const anyTypeResult = detectAnyTypeUsage(code);
+            if (anyTypeResult.issues.length > 0) {
+                anyTypeResult.issues.forEach((issue: string) => {
+                    diagnostics.push(new vscode.Diagnostic(
+                        new vscode.Range(new vscode.Position(0, 0), new vscode.Position(0, 0)),
+                        issue,
+                        vscode.DiagnosticSeverity.Warning
+                    ));
+                });
+            }
         }
     }
 
