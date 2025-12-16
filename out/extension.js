@@ -2,7 +2,6 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.activate = activate;
 exports.deactivate = deactivate;
-// extension.ts
 const vscode = require("vscode");
 const analyzer_1 = require("./analyzer");
 const reportPanel_1 = require("./reportPanel");
@@ -68,25 +67,25 @@ function checkCommentRatio(commentLines, lineCount, filePath) {
             filePath
         }];
 }
-function checkDuplicateBlocks(duplicateBlocks, codeText, filePath) {
-    if (duplicateBlocks <= 0)
-        return [];
+function checkDuplicateBlocks(codeText, filePath, minBlockSize = 3) {
     const issues = [];
-    const linesCountMap = {};
-    const codeLines = codeText.split('\n');
-    for (let i = 0; i < codeLines.length; i++) {
-        const trimmed = codeLines[i].trim();
-        if (!trimmed)
-            continue;
-        if (!linesCountMap[trimmed]) {
-            linesCountMap[trimmed] = { count: 1, lines: [i + 1] };
+    const lines = codeText.split('\n');
+    const blockMap = new Map(); // key = block hash, value = 行号数组
+    for (let i = 0; i <= lines.length - minBlockSize; i++) {
+        const block = lines.slice(i, i + minBlockSize).map(l => l.trim()).join('\n');
+        if (!block.trim())
+            continue; // 空块不算
+        if (!blockMap.has(block)) {
+            blockMap.set(block, [i + 1]);
         }
         else {
-            linesCountMap[trimmed].count++;
-            linesCountMap[trimmed].lines.push(i + 1);
-            if (linesCountMap[trimmed].count > 3) {
+            const occurrences = blockMap.get(block);
+            occurrences.push(i + 1);
+            // 仅当出现超过1次时才报 issue
+            if (occurrences.length === 2) {
+                // 第一次重复出现
                 issues.push({
-                    message: `检测到重复代码: "${trimmed.substring(0, 30)}${trimmed.length > 30 ? '...' : ''}"`,
+                    message: `检测到重复代码块（${minBlockSize}行起）`,
                     line: i + 1,
                     severity: 1,
                     filePath
@@ -160,7 +159,7 @@ function generateIssuesFromQualityScore(qualityScore, codeText, filePath) {
         ...checkFunctionCount(functionCount, codeText, filePath),
         ...checkFunctionLength(codeText, filePath),
         ...checkCommentRatio(commentLines, lineCount, filePath),
-        ...checkDuplicateBlocks(duplicateBlocks, codeText, filePath),
+        ...checkDuplicateBlocks(codeText, filePath, duplicateBlocks),
         ...checkTestScore(testScore, filePath),
         ...checkWhitespaceIssues(codeText, filePath),
         ...checkNamingConvention(codeText, filePath)

@@ -1,4 +1,3 @@
-// extension.ts
 import * as vscode from 'vscode';
 import { analyzeCode, analyzeDirectory } from './analyzer';
 import { showQualityReport } from './reportPanel';
@@ -67,24 +66,26 @@ function checkCommentRatio(commentLines: number, lineCount: number, filePath: st
     }];
 }
 
-function checkDuplicateBlocks(duplicateBlocks: number, codeText: string, filePath: string) {
-    if (duplicateBlocks <= 0) return [];
+function checkDuplicateBlocks(codeText: string, filePath: string, minBlockSize = 3) {
     const issues: any[] = [];
-    const linesCountMap: Record<string, { count: number; lines: number[] }> = {};
-    const codeLines = codeText.split('\n');
+    const lines = codeText.split('\n');
+    const blockMap = new Map<string, number[]>(); // key = block hash, value = 行号数组
 
-    for (let i = 0; i < codeLines.length; i++) {
-        const trimmed = codeLines[i].trim();
-        if (!trimmed) continue;
+    for (let i = 0; i <= lines.length - minBlockSize; i++) {
+        const block = lines.slice(i, i + minBlockSize).map(l => l.trim()).join('\n');
+        if (!block.trim()) continue; // 空块不算
 
-        if (!linesCountMap[trimmed]) {
-            linesCountMap[trimmed] = { count: 1, lines: [i + 1] };
+        if (!blockMap.has(block)) {
+            blockMap.set(block, [i + 1]);
         } else {
-            linesCountMap[trimmed].count++;
-            linesCountMap[trimmed].lines.push(i + 1);
-            if (linesCountMap[trimmed].count > 3) {
+            const occurrences = blockMap.get(block)!;
+            occurrences.push(i + 1);
+
+            // 仅当出现超过1次时才报 issue
+            if (occurrences.length === 2) {
+                // 第一次重复出现
                 issues.push({
-                    message: `检测到重复代码: "${trimmed.substring(0, 30)}${trimmed.length > 30 ? '...' : ''}"`,
+                    message: `检测到重复代码块（${minBlockSize}行起）`,
                     line: i + 1,
                     severity: 1,
                     filePath
@@ -170,7 +171,7 @@ function generateIssuesFromQualityScore(
         ...checkFunctionCount(functionCount, codeText, filePath),
         ...checkFunctionLength(codeText, filePath),
         ...checkCommentRatio(commentLines, lineCount, filePath),
-        ...checkDuplicateBlocks(duplicateBlocks, codeText, filePath),
+        ...checkDuplicateBlocks(codeText, filePath, duplicateBlocks),
         ...checkTestScore(testScore, filePath),
         ...checkWhitespaceIssues(codeText, filePath),
         ...checkNamingConvention(codeText, filePath)
