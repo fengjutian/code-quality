@@ -39,7 +39,7 @@ function activate(context) {
             }));
             // 添加非ESLint质量问题作为建议
             if (qualityScore.details) {
-                const { lineCount, functionCount, commentLines, duplicateCount } = qualityScore.details;
+                const { lineCount, functionCount, commentLines, duplicateBlocks } = qualityScore.details;
                 // 如果行数过多，添加警告
                 if (lineCount > 200) {
                     issues.push({
@@ -164,7 +164,7 @@ function activate(context) {
                     // 添加非ESLint质量问题作为建议
                     const fileQualityScore = (0, qualityScore_1.calculateQualityScore)(result.diagnostics, result.codeText);
                     if (fileQualityScore.details) {
-                        const { lineCount, functionCount, commentLines, duplicateCount } = fileQualityScore.details;
+                        const { lineCount, functionCount, commentLines, duplicateBlocks } = fileQualityScore.details;
                         // 如果行数过多，添加警告
                         if (lineCount > 200) {
                             fileIssues.push({

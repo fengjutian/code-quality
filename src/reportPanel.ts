@@ -20,7 +20,7 @@ interface CodeQualityScore {
     lineCount: number;
     functionCount: number;
     commentLines: number;
-    duplicateCount: number;
+    duplicateBlocks: number;
     diagnosticsCount: number;
   };
 }

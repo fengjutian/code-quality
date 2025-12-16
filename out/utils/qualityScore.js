@@ -1,33 +1,59 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.calculateQualityScore = calculateQualityScore;
-/**
- * 根据代码文本和 ESLint 报告计算各项质量评分
- */
+const vscode = require("vscode");
+const clamp = (v, min = 0, max = 100) => Math.max(min, Math.min(max, v));
 function calculateQualityScore(diagnostics, codeText) {
-    const lines = codeText.split('\n').length;
-    // eslint评分：基于 diagnostics 数量
-    const eslintScore = Math.max(0, 100 - diagnostics.length * 5);
-    // 复杂度评分：函数数量 / 行数，越多扣分
+    const lines = codeText.split('\n');
+    const lineCount = Math.max(lines.length, 1);
+    /* ================= ESLint 评分 ================= */
+    let eslintPenalty = 0;
+    for (const d of diagnostics) {
+        switch (d.severity) {
+            case vscode.DiagnosticSeverity.Error:
+                eslintPenalty += 5;
+                break;
+            case vscode.DiagnosticSeverity.Warning:
+                eslintPenalty += 2;
+                break;
+            default:
+                eslintPenalty += 1;
+        }
+    }
+    // 密度化 + 上限
+    const eslintScore = clamp(100 - Math.min(40, (eslintPenalty / lineCount) * 100));
+    /* ================= 复杂度评分 ================= */
     const functionCount = (codeText.match(/\bfunction\b|\b=>\b/g) || []).length;
-    const complexityScore = Math.max(0, 100 - functionCount * 2 - Math.floor(lines / 200));
-    // 注释评分：注释行占比
+    const ifCount = (codeText.match(/\bif\b|\bswitch\b|\bfor\b|\bwhile\b/g) || []).length;
+    const complexityIndex = (functionCount + ifCount * 1.5) / lineCount;
+    const complexityScore = clamp(100 - complexityIndex * 800);
+    /* ================= 注释评分 ================= */
     const commentLines = (codeText.match(/^\s*(\/\/|\/\*|\*)/gm) || []).length;
-    const commentScore = Math.min(100, Math.floor((commentLines / lines) * 100));
-    // 重复代码评分：重复行超过3次扣分
-    const linesCountMap = {};
-    codeText.split('\n').forEach(line => {
-        const trimmed = line.trim();
-        if (!trimmed)
-            return;
-        linesCountMap[trimmed] = (linesCountMap[trimmed] || 0) + 1;
+    const commentRatio = commentLines / lineCount;
+    // 合理区间：5% ~ 25%
+    let commentScore = 100;
+    if (commentRatio < 0.05)
+        commentScore = 70;
+    else if (commentRatio > 0.3)
+        commentScore = 60;
+    /* ================= 重复代码评分 ================= */
+    const lineCountMap = {};
+    lines.forEach(line => {
+        const t = line.trim();
+        if (t.length < 15)
+            return; // 过滤无意义短行
+        lineCountMap[t] = (lineCountMap[t] || 0) + 1;
     });
-    const duplicateCount = Object.values(linesCountMap).filter(v => v > 3).length;
-    const duplicateScore = Math.max(0, 100 - duplicateCount * 5);
-    // 测试覆盖率评分：暂定固定值，可接实际工具
-    const testScore = 80;
-    // 总分：各指标平均
-    const totalScore = Math.round((eslintScore + complexityScore + commentScore + duplicateScore + testScore) / 5);
+    const duplicateBlocks = Object.values(lineCountMap).filter(v => v >= 4).length;
+    const duplicateScore = clamp(100 - duplicateBlocks * 5);
+    /* ================= 测试评分 ================= */
+    const testScore = 80; // 可接 Jest / Coverage
+    /* ================= 总分 ================= */
+    const totalScore = Math.round(eslintScore * 0.4 +
+        complexityScore * 0.25 +
+        commentScore * 0.15 +
+        duplicateScore * 0.1 +
+        testScore * 0.1);
     return {
         score: totalScore,
         breakdown: {
@@ -37,12 +63,11 @@ function calculateQualityScore(diagnostics, codeText) {
             duplicateScore,
             testScore
         },
-        // Return details for issue reporting
         details: {
-            lineCount: lines,
+            lineCount,
             functionCount,
             commentLines,
-            duplicateCount,
+            duplicateBlocks,
             diagnosticsCount: diagnostics.length
         }
     };
