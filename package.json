@@ -45,7 +45,33 @@
         "command": "extension.analyzeWithAI",
         "title": "Analyze Code Quality (AI当前文件质量评估)"
       }
-    ]
+    ],
+    "menus": {
+      "explorer/context": [
+        {
+          "command": "extension.analyzeCode",
+          "when": "resourceLangId != 'plaintext'",
+          "group": "codeQuality@1"
+        },
+        {
+          "command": "extension.analyzeWithAI",
+          "when": "resourceLangId != 'plaintext'",
+          "group": "codeQuality@2"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "extension.analyzeCode",
+          "when": "editorTextFocus",
+          "group": "codeQuality@1"
+        },
+        {
+          "command": "extension.analyzeWithAI",
+          "when": "editorTextFocus",
+          "group": "codeQuality@2"
+        }
+      ]
+    }
   },
   "dependencies": {
     "openai": "^6.14.0"
