@@ -2,7 +2,6 @@
 import { ESLint } from "eslint";
 import * as fs from "fs";
 import OpenAI from "openai"; // 使用官方 openai SDK
-import * as path from "path";
 
 export interface FileAnalysisResult {
   filePath: string;
