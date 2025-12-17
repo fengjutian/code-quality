@@ -3,7 +3,8 @@ import { analyzeCode, analyzeDirectory } from './analyzer';
 import { showQualityReport } from './reportPanel';
 import { calculateQualityScore } from './utils/qualityScore';
 import { QualityScorerAI, FileAnalysisResult } from "./qualityScoreWithAI";
-import { createAIQualityAssessmentCommand, assessCodeQuality, generateAIReportHTML } from './llm/code-annotation-AI';
+import { createAIQualityAssessmentCommand, assessCodeQuality } from './llm/code-annotation-AI';
+import { generateAIReportHTML } from './view-template/ai-template';
 import { getLLMConfig } from './llm/config';
 import {
   checkLineCount,
@@ -338,7 +339,13 @@ export async function activate(context: vscode.ExtensionContext) {
         }
     });
 
-    context.subscriptions.push(disposable, projectDisposable, analyzeWithAIDisposable);
+    // 注册配置命令
+    const configureLLMDisposable = vscode.commands.registerCommand('extension.configureLLM', () => {
+        // 打开设置页面并定位到我们的扩展配置
+        vscode.commands.executeCommand('workbench.action.openSettings', 'codeQualityAnalyzer.llm');
+    });
+
+    context.subscriptions.push(disposable, projectDisposable, analyzeWithAIDisposable, configureLLMDisposable);
 }
 
 export function deactivate() {}

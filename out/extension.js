@@ -8,6 +8,7 @@ const reportPanel_1 = require("./reportPanel");
 const qualityScore_1 = require("./utils/qualityScore");
 const qualityScoreWithAI_1 = require("./qualityScoreWithAI");
 const code_annotation_AI_1 = require("./llm/code-annotation-AI");
+const ai_template_1 = require("./view-template/ai-template");
 const config_1 = require("./llm/config");
 const quailty_check_1 = require("./utils/quailty-check");
 /**
@@ -245,7 +246,7 @@ async function activate(context) {
                         progress.report({ message: 'AI评估完成', increment: 100 });
                         // 显示AI评估报告
                         const panel = vscode.window.createWebviewPanel('codeQualityAIReport', 'AI代码质量评估报告', vscode.ViewColumn.Beside, { enableScripts: true });
-                        panel.webview.html = (0, code_annotation_AI_1.generateAIReportHTML)(aiAssessment);
+                        panel.webview.html = (0, ai_template_1.generateAIReportHTML)(aiAssessment);
                         vscode.window.showInformationMessage('AI代码质量评估完成！');
                     }
                     catch (error) {
@@ -265,7 +266,12 @@ async function activate(context) {
             handleError(err, diagnosticCollection);
         }
     });
-    context.subscriptions.push(disposable, projectDisposable, analyzeWithAIDisposable);
+    // 注册配置命令
+    const configureLLMDisposable = vscode.commands.registerCommand('extension.configureLLM', () => {
+        // 打开设置页面并定位到我们的扩展配置
+        vscode.commands.executeCommand('workbench.action.openSettings', 'codeQualityAnalyzer.llm');
+    });
+    context.subscriptions.push(disposable, projectDisposable, analyzeWithAIDisposable, configureLLMDisposable);
 }
 function deactivate() { }
 //# sourceMappingURL=extension.js.map

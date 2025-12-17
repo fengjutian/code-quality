@@ -44,6 +44,10 @@
       {
         "command": "extension.analyzeWithAI",
         "title": "Analyze Code Quality (AI当前文件质量评估)"
+      },
+      {
+        "command": "extension.configureLLM",
+        "title": "Configure LLM Settings"
       }
     ],
     "menus": {
@@ -71,6 +75,53 @@
           "group": "codeQuality@2"
         }
       ]
+    },
+    "configuration": {
+      "title": "Code Quality Analyzer - LLM",
+      "properties": {
+        "codeQualityAnalyzer.llm.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable AI-powered code quality analysis"
+        },
+        "codeQualityAnalyzer.llm.model": {
+          "type": "string",
+          "default": "kimi-k2-0905-preview",
+          "description": "LLM model name"
+        },
+        "codeQualityAnalyzer.llm.apiKey": {
+          "type": "string",
+          "default": "",
+          "description": "LLM API key",
+          "scope": "machine",
+          "secret": true
+        },
+        "codeQualityAnalyzer.llm.baseURL": {
+          "type": "string",
+          "default": "https://api.moonshot.cn/v1/chat/completions",
+          "description": "LLM API base URL"
+        },
+        "codeQualityAnalyzer.llm.temperature": {
+          "type": "number",
+          "default": 0.3,
+          "description": "Sampling temperature (0-1)",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "codeQualityAnalyzer.llm.maxTokens": {
+          "type": "integer",
+          "default": 3000,
+          "description": "Maximum number of tokens to generate",
+          "minimum": 100,
+          "maximum": 4096
+        },
+        "codeQualityAnalyzer.llm.timeout": {
+          "type": "integer",
+          "default": 120000,
+          "description": "Request timeout in milliseconds",
+          "minimum": 1000
+        }
+      }
     }
   },
   "dependencies": {

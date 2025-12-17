@@ -14,7 +14,7 @@ export const DEFAULT_LLM_CONFIG: LLMConfig = {
     model: 'kimi-k2-0905-preview',
     temperature: 0.3,
     maxTokens: 3000,
-    apiKey: 'sk-IZwZS47Lq7VR7SqtbYythH7DwpwOUcL3Ymhaq3CVKCIEl6IC',
+    apiKey: undefined,
     timeout: 120000,
     enabled: true,
     baseURL: 'https://api.moonshot.cn/v1/chat/completions',
