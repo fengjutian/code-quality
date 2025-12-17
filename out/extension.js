@@ -94,7 +94,7 @@ async function activate(context) {
                     location: vscode.ProgressLocation.Notification,
                     title: '正在使用AI进行深度代码分析...',
                     cancellable: false,
-                }, async (progress) => {
+                }, async () => {
                     try {
                         const scorer = new qualityScoreWithAI_1.QualityScorerAI(openaiApiKey);
                         const aiResult = await scorer.analyzeFile(filePath);

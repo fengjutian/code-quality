@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { analyzeCode, analyzeDirectory } from './analyzer';
 import { showQualityReport } from './reportPanel';
 import { calculateQualityScore } from './utils/qualityScore';
-import { QualityScorerAI, FileAnalysisResult } from "./qualityScoreWithAI";
+import { QualityScorerAI } from "./qualityScoreWithAI";
 import { createAIQualityAssessmentCommand, assessCodeQuality } from './llm/code-annotation-AI';
 import { generateAIReportHTML } from './view-template/ai-template';
 import { getLLMConfig } from './llm/config';
@@ -132,7 +132,7 @@ export async function activate(context: vscode.ExtensionContext) {
                         title: '正在使用AI进行深度代码分析...',
                         cancellable: false,
                     },
-                    async (progress) => {
+                    async () => {
                         try {
                             const scorer = new QualityScorerAI(openaiApiKey);
                             const aiResult = await scorer.analyzeFile(filePath);
