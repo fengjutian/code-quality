@@ -1,0 +1,25 @@
+id: frontend
+description: 前端（Web / H5 / 小程序）
+
+assumptions:
+  user_facing: true
+  performance_sensitive: false
+  data_loss_tolerant: medium
+
+rules:
+  enable:
+    - naming_consistency
+    - ui_side_effects
+  disable:
+    - strict_transaction_check
+
+rule_overrides:
+  missing_error_handling:
+    severity: medium
+
+  cyclomatic_complexity:
+    threshold: 20
+
+prompt_overrides:
+  p3_semantic:
+    focus: [readability, maintainability]

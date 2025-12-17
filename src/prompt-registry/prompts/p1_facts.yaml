@@ -1,0 +1,26 @@
+id: p1_facts
+role: system
+type: extractor
+temperature: 0
+max_tokens: 800
+
+description: >
+  提取代码的客观事实，不做任何评价。
+
+prompt: |
+  你是一个代码分析器。
+  只基于代码本身提取客观事实，不做任何判断。
+
+  请输出 JSON，包含：
+  - module_summary
+  - core_functions
+  - change_points
+  - has_side_effects (true/false)
+  - has_io (true/false)
+
+output_schema:
+  module_summary: string
+  core_functions: string[]
+  change_points: string[]
+  has_side_effects: boolean
+  has_io: boolean

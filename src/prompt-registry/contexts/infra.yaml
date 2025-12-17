@@ -1,0 +1,14 @@
+id: infra
+description: 脚本 / CI / 运维工具
+
+assumptions:
+  user_facing: false
+  failure_tolerant: low
+
+rule_overrides:
+  missing_logging:
+    severity: high
+
+prompt_overrides:
+  p3_semantic:
+    focus: [robustness, clarity]

@@ -1,7 +1,7 @@
 {
   "name": "code-quality",
   "displayName": "VSCode Code Quality",
-  "description": "VSCode plugin to analyze code quality",
+  "description": "CodeOracle: 用于代码决策的“预言机”",
   "version": "0.0.1",
   "engines": {
     "vscode": "^1.80.0"
@@ -35,19 +35,19 @@
     "commands": [
       {
         "command": "extension.analyzeCode",
-        "title": "Analyze Code Quality (当前文件)"
+        "title": "CodeOracle: Analyze Code (当前文件)"
       },
       {
         "command": "extension.analyzeProject",
-        "title": "Analyze Code Quality (整个项目)"
+        "title": "CodeOracle: Analyze Code (整个项目)"
       },
       {
         "command": "extension.analyzeWithAI",
-        "title": "Analyze Code Quality (AI当前文件质量评估)"
+        "title": "CodeOracle: Analyze Code (AI当前文件质量评估)"
       },
       {
         "command": "extension.configureLLM",
-        "title": "Configure LLM Settings"
+        "title": "CodeOracle: Configure LLM Settings (大模型配置)"
       }
     ],
     "menus": {

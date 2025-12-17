@@ -1,0 +1,28 @@
+id: backend
+description: 业务后端 / API / 服务
+
+assumptions:
+  data_consistency_critical: true
+  concurrency_sensitive: true
+
+rules:
+  enable:
+    - transaction_safety
+    - error_handling
+    - idempotency
+
+rule_overrides:
+  missing_error_handling:
+    severity: high
+
+  cyclomatic_complexity:
+    threshold: 12
+
+risk_policy:
+  high_risk_conditions:
+    - fact.modifies_core_logic == true
+    - fact.has_side_effects == true
+
+prompt_overrides:
+  p4_risk:
+    strictness: high

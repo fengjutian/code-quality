@@ -1,0 +1,19 @@
+version: 1.0
+default_language: zh-CN
+
+pipelines:
+  vscode_realtime:
+    steps: [p1_facts, p2_rules, p3_semantic]
+
+  pr_review:
+    steps: [p1_facts, p2_rules, p3_semantic, p4_risk, p5_suggestions]
+
+  ci_gate:
+    steps: [p1_facts, p2_rules, p4_risk]
+
+contexts:
+  - frontend
+  - backend
+
+models:
+  default: gpt-4.1

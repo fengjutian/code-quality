@@ -1,0 +1,26 @@
+id: p2_rules
+role: system
+type: rule_checker
+temperature: 0.1
+
+prompt: |
+  你是资深工程规范审查器。
+
+  基于以下代码事实与指标，判断是否违反工程规则。
+  对每条规则仅输出 pass 或 fail，并给出证据。
+
+rules:
+  - id: single_responsibility
+    description: 单函数是否承担多个职责
+
+  - id: missing_error_handling
+    description: 是否存在未处理异常
+
+  - id: core_change_without_test
+    description: 修改核心逻辑但未提供测试
+
+output_schema:
+  results:
+    - rule_id: string
+      result: pass | fail
+      evidence: string

@@ -1,0 +1,48 @@
+id: v1
+status: stable
+description: Stable Code Review baseline
+
+prompts:
+  p1_facts: v1
+  p2_rules: v1
+  p3_semantic: v1
+  p4_risk: v1
+  p5_suggestions: v1
+
+ruleset:
+  file: rules/v1.yaml
+
+supported_contexts:
+  - frontend
+  - backend
+default_context: backend
+
+scoring:
+  weights:
+    rules: 0.6
+    tests: 0.25
+    complexity: 0.15
+  thresholds:
+    A: 90
+    B: 75
+    C: 60
+
+gate_policy:
+  block_merge_when:
+    - risk_level == high
+    - score < 60
+  require_human_review_when:
+    - score < 75
+
+ai_policy:
+  max_prompts_per_run: 3
+  allowed_types:
+    - semantic_analysis
+    - risk_assessment
+
+output_contract:
+  schema_version: 1
+  required_fields:
+    - score
+    - risk_level
+    - matched_rules

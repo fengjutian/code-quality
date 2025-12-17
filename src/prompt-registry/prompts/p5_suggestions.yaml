@@ -1,0 +1,15 @@
+id: p5_suggestions
+role: system
+type: suggestion_generator
+temperature: 0.4
+
+prompt: |
+  你是代码改进顾问。
+
+  仅针对已识别的问题，给出最多 3 条改进建议。
+  每条建议必须是可操作的。
+
+output_schema:
+  suggestions:
+    - priority: high | medium | low
+      suggestion: string
