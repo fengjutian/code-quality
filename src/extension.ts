@@ -3,14 +3,16 @@ import { analyzeCode, analyzeDirectory } from './analyzer';
 import { showQualityReport } from './reportPanel';
 import { calculateQualityScore } from './utils/qualityScore';
 import { QualityScorerAI, FileAnalysisResult } from "./qualityScoreWithAI";
-import { 
-  checkLineCount, 
-  checkFunctionCount, 
-  checkCommentRatio, 
-  checkDuplicateBlocks, 
-  checkTestScore, 
-  checkWhitespaceIssues, 
-  checkNamingConvention 
+import { createAIQualityAssessmentCommand, assessCodeQuality, generateAIReportHTML } from './llm/code-annotation-AI';
+import { getLLMConfig } from './llm/config';
+import {
+  checkLineCount,
+  checkFunctionCount,
+  checkCommentRatio,
+  checkDuplicateBlocks,
+  checkTestScore,
+  checkWhitespaceIssues,
+  checkNamingConvention
 } from './utils/quailty-check';
 
 
@@ -60,7 +62,7 @@ function analyzeFileAndGenerateIssues(
 /**
  * ======== VS Code 插件激活 ========
  */
-export function activate(context: vscode.ExtensionContext) {
+export async function activate(context: vscode.ExtensionContext) {
     const diagnosticCollection = vscode.languages.createDiagnosticCollection('codeQuality');
     context.subscriptions.push(diagnosticCollection);
 
@@ -260,7 +262,81 @@ export function activate(context: vscode.ExtensionContext) {
         }
     });
 
-    context.subscriptions.push(disposable, projectDisposable);
+    // 注册AI质量评估命令
+    const aiAssessmentDisposable = await createAIQualityAssessmentCommand();
+    context.subscriptions.push(aiAssessmentDisposable);
+
+    // 在analyzeCode命令中集成AI质量评估功能
+    const analyzeWithAIDisposable = vscode.commands.registerCommand('extension.analyzeWithAI', async () => {
+        const editor = vscode.window.activeTextEditor;
+        if (!editor) return vscode.window.showErrorMessage('没有打开任何文件');
+
+        const filePath = editor.document.uri.fsPath;
+        const code = editor.document.getText();
+        const language = editor.document.languageId;
+        
+        try {
+            // 先运行传统分析获取基础问题
+            const cwd = vscode.workspace.getWorkspaceFolder(editor.document.uri)?.uri.fsPath;
+            const diagnostics = await analyzeCode(code, language, cwd, filePath);
+            diagnosticCollection.set(editor.document.uri, diagnostics);
+
+            const { allIssues, qualityScore } = analyzeFileAndGenerateIssues(
+                code,
+                diagnostics,
+                filePath
+            );
+
+            // 检查AI配置是否启用
+            const llmConfig = getLLMConfig();
+            if (llmConfig.enabled) {
+                // 运行AI质量评估
+                await vscode.window.withProgress({
+                    location: vscode.ProgressLocation.Notification,
+                    title: '正在使用AI评估代码质量...',
+                    cancellable: true
+                }, async (progress) => {
+                    progress.report({ message: '正在生成AI评估...', increment: 0 });
+                    
+                    try {
+                        const aiAssessment = await assessCodeQuality({
+                            code,
+                            language,
+                            issues: allIssues,
+                            filePath,
+                            lineCount: editor.document.lineCount
+                        });
+                        
+                        progress.report({ message: 'AI评估完成', increment: 100 });
+                        
+                        // 显示AI评估报告
+                        const panel = vscode.window.createWebviewPanel(
+                            'codeQualityAIReport',
+                            'AI代码质量评估报告',
+                            vscode.ViewColumn.Beside,
+                            { enableScripts: true }
+                        );
+                        
+                        panel.webview.html = generateAIReportHTML(aiAssessment);
+                        
+                        vscode.window.showInformationMessage('AI代码质量评估完成！');
+                    } catch (error) {
+                        vscode.window.showErrorMessage(`AI评估失败: ${error instanceof Error ? error.message : '未知错误'}`);
+                        // 继续显示传统报告
+                        showQualityReport(context, qualityScore, allIssues);
+                    }
+                });
+            } else {
+                // AI功能未启用，仅显示传统报告
+                showQualityReport(context, qualityScore, allIssues);
+                vscode.window.showInformationMessage('代码分析完成！(AI功能未启用)');
+            }
+        } catch (err: unknown) {
+            handleError(err, diagnosticCollection);
+        }
+    });
+
+    context.subscriptions.push(disposable, projectDisposable, analyzeWithAIDisposable);
 }
 
 export function deactivate() {}

@@ -7,139 +7,9 @@ const analyzer_1 = require("./analyzer");
 const reportPanel_1 = require("./reportPanel");
 const qualityScore_1 = require("./utils/qualityScore");
 const qualityScoreWithAI_1 = require("./qualityScoreWithAI");
-/**
- * ======== 质量检查小函数集合 ========
- * 每个函数负责生成对应的 issues
- */
-function checkLineCount(lineCount, filePath) {
-    if (lineCount <= 200)
-        return [];
-    return [{
-            message: `文件行数过多 (${lineCount} 行)，建议拆分为多个小文件`,
-            line: lineCount,
-            severity: 1,
-            filePath
-        }];
-}
-function checkFunctionCount(functionCount, codeText, filePath) {
-    if (functionCount <= 10)
-        return [];
-    const codeLines = codeText.split('\n');
-    const firstFunctionLine = codeLines.findIndex(line => line.includes('function') || line.includes('=>')) + 1 || 1;
-    return [{
-            message: `函数数量过多 (${functionCount} 个)，建议重构代码`,
-            line: firstFunctionLine,
-            severity: 1,
-            filePath
-        }];
-}
-function checkCommentRatio(commentLines, lineCount, filePath) {
-    const ratio = commentLines / lineCount;
-    // Based on new scoring: reasonable range is 5% ~ 25%
-    if (ratio >= 0.05 && ratio <= 0.25)
-        return [];
-    if (ratio < 0.05) {
-        return [{
-                message: `注释比例过低 (${(ratio * 100).toFixed(1)}%)，建议增加注释`,
-                line: 1,
-                severity: 1,
-                filePath
-            }];
-    }
-    else {
-        return [{
-                message: `注释比例过高 (${(ratio * 100).toFixed(1)}%)，建议减少不必要的注释`,
-                line: 1,
-                severity: 1,
-                filePath
-            }];
-    }
-}
-function checkDuplicateBlocks(codeText, filePath) {
-    const issues = [];
-    const lines = codeText.split('\n');
-    const lineCountMap = {};
-    // Build map of lines to their line numbers
-    lines.forEach((line, index) => {
-        const trimmedLine = line.trim();
-        // Filter out short and comment lines
-        if (trimmedLine.length < 15 || trimmedLine.startsWith('//') || trimmedLine.startsWith('/*') || trimmedLine.startsWith('*')) {
-            return;
-        }
-        if (!lineCountMap[trimmedLine]) {
-            lineCountMap[trimmedLine] = [];
-        }
-        lineCountMap[trimmedLine].push(index + 1);
-    });
-    // Check for duplicates (4 or more occurrences)
-    Object.entries(lineCountMap).forEach(([lineContent, lineNumbers]) => {
-        if (lineNumbers.length >= 4) {
-            // Report each occurrence after the third
-            for (let i = 3; i < lineNumbers.length; i++) {
-                issues.push({
-                    message: `检测到重复代码: "${lineContent.substring(0, 30)}${lineContent.length > 30 ? '...' : ''}"`,
-                    line: lineNumbers[i],
-                    severity: 1,
-                    filePath
-                });
-            }
-        }
-    });
-    return issues;
-}
-function checkTestScore(testScore, filePath) {
-    if (testScore >= 70)
-        return [];
-    return [{
-            message: `测试覆盖率不足 (${testScore}%)，建议增加测试`,
-            line: 1,
-            severity: 1,
-            filePath
-        }];
-}
-function checkWhitespaceIssues(codeText, filePath) {
-    const issues = [];
-    const lines = codeText.split(/\r?\n/);
-    lines.forEach((line, idx) => {
-        if (/\s+$/.test(line)) {
-            issues.push({
-                message: '行尾存在多余空格',
-                line: idx + 1,
-                severity: 1,
-                filePath
-            });
-        }
-    });
-    for (let i = 1; i < lines.length; i++) {
-        if (lines[i].trim() === '' && lines[i - 1].trim() === '') {
-            issues.push({
-                message: '存在连续空行',
-                line: i + 1,
-                severity: 1,
-                filePath
-            });
-        }
-    }
-    return issues;
-}
-function checkNamingConvention(codeText, filePath) {
-    const issues = [];
-    const varRegex = /\b(const|let|var|function)\s+([a-zA-Z_]\w*)/g;
-    let match;
-    while ((match = varRegex.exec(codeText)) !== null) {
-        const name = match[2];
-        if (name.length === 1) {
-            const line = codeText.substr(0, match.index).split('\n').length;
-            issues.push({
-                message: `变量或函数名 "${name}" 太短，建议使用描述性名称`,
-                line,
-                severity: 1,
-                filePath
-            });
-        }
-    }
-    return issues;
-}
+const code_annotation_AI_1 = require("./llm/code-annotation-AI");
+const config_1 = require("./llm/config");
+const quailty_check_1 = require("./utils/quailty-check");
 /**
  * 根据 qualityScore 生成所有 issues
  */
@@ -147,13 +17,13 @@ function generateIssuesFromQualityScore(qualityScore, codeText, filePath) {
     const { lineCount, functionCount, commentLines } = qualityScore.details;
     const testScore = qualityScore.breakdown.testScore;
     return [
-        ...checkLineCount(lineCount, filePath),
-        ...checkFunctionCount(functionCount, codeText, filePath),
-        ...checkCommentRatio(commentLines, lineCount, filePath),
-        ...checkDuplicateBlocks(codeText, filePath),
-        ...checkTestScore(testScore, filePath),
-        ...checkWhitespaceIssues(codeText, filePath),
-        ...checkNamingConvention(codeText, filePath)
+        ...(0, quailty_check_1.checkLineCount)(lineCount, filePath),
+        ...(0, quailty_check_1.checkFunctionCount)(functionCount, codeText, filePath),
+        ...(0, quailty_check_1.checkCommentRatio)(commentLines, lineCount, filePath),
+        ...(0, quailty_check_1.checkDuplicateBlocks)(codeText, filePath),
+        ...(0, quailty_check_1.checkTestScore)(testScore, filePath),
+        ...(0, quailty_check_1.checkWhitespaceIssues)(codeText, filePath),
+        ...(0, quailty_check_1.checkNamingConvention)(codeText, filePath)
     ];
 }
 /**
@@ -173,7 +43,7 @@ function analyzeFileAndGenerateIssues(codeText, diagnostics, filePath) {
 /**
  * ======== VS Code 插件激活 ========
  */
-function activate(context) {
+async function activate(context) {
     const diagnosticCollection = vscode.languages.createDiagnosticCollection('codeQuality');
     context.subscriptions.push(diagnosticCollection);
     // 通用错误处理
@@ -336,7 +206,65 @@ function activate(context) {
             handleError(err, diagnosticCollection);
         }
     });
-    context.subscriptions.push(disposable, projectDisposable);
+    // 注册AI质量评估命令
+    const aiAssessmentDisposable = await (0, code_annotation_AI_1.createAIQualityAssessmentCommand)();
+    context.subscriptions.push(aiAssessmentDisposable);
+    // 在analyzeCode命令中集成AI质量评估功能
+    const analyzeWithAIDisposable = vscode.commands.registerCommand('extension.analyzeWithAI', async () => {
+        const editor = vscode.window.activeTextEditor;
+        if (!editor)
+            return vscode.window.showErrorMessage('没有打开任何文件');
+        const filePath = editor.document.uri.fsPath;
+        const code = editor.document.getText();
+        const language = editor.document.languageId;
+        try {
+            // 先运行传统分析获取基础问题
+            const cwd = vscode.workspace.getWorkspaceFolder(editor.document.uri)?.uri.fsPath;
+            const diagnostics = await (0, analyzer_1.analyzeCode)(code, language, cwd, filePath);
+            diagnosticCollection.set(editor.document.uri, diagnostics);
+            const { allIssues, qualityScore } = analyzeFileAndGenerateIssues(code, diagnostics, filePath);
+            // 检查AI配置是否启用
+            const llmConfig = (0, config_1.getLLMConfig)();
+            if (llmConfig.enabled) {
+                // 运行AI质量评估
+                await vscode.window.withProgress({
+                    location: vscode.ProgressLocation.Notification,
+                    title: '正在使用AI评估代码质量...',
+                    cancellable: true
+                }, async (progress) => {
+                    progress.report({ message: '正在生成AI评估...', increment: 0 });
+                    try {
+                        const aiAssessment = await (0, code_annotation_AI_1.assessCodeQuality)({
+                            code,
+                            language,
+                            issues: allIssues,
+                            filePath,
+                            lineCount: editor.document.lineCount
+                        });
+                        progress.report({ message: 'AI评估完成', increment: 100 });
+                        // 显示AI评估报告
+                        const panel = vscode.window.createWebviewPanel('codeQualityAIReport', 'AI代码质量评估报告', vscode.ViewColumn.Beside, { enableScripts: true });
+                        panel.webview.html = (0, code_annotation_AI_1.generateAIReportHTML)(aiAssessment);
+                        vscode.window.showInformationMessage('AI代码质量评估完成！');
+                    }
+                    catch (error) {
+                        vscode.window.showErrorMessage(`AI评估失败: ${error instanceof Error ? error.message : '未知错误'}`);
+                        // 继续显示传统报告
+                        (0, reportPanel_1.showQualityReport)(context, qualityScore, allIssues);
+                    }
+                });
+            }
+            else {
+                // AI功能未启用，仅显示传统报告
+                (0, reportPanel_1.showQualityReport)(context, qualityScore, allIssues);
+                vscode.window.showInformationMessage('代码分析完成！(AI功能未启用)');
+            }
+        }
+        catch (err) {
+            handleError(err, diagnosticCollection);
+        }
+    });
+    context.subscriptions.push(disposable, projectDisposable, analyzeWithAIDisposable);
 }
 function deactivate() { }
 //# sourceMappingURL=extension.js.map
