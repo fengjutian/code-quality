@@ -35,15 +35,19 @@
     "commands": [
       {
         "command": "extension.analyzeCode",
-        "title": "TT Analyze Code Quality (当前文件)"
+        "title": "Analyze Code Quality (当前文件)"
       },
       {
         "command": "extension.analyzeProject",
-        "title": "TT Analyze Code Quality (整个项目)"
+        "title": "Analyze Code Quality (整个项目)"
+      },
+      {
+        "command": "extension.analyzeWithAI",
+        "title": "Analyze Code Quality (AI当前文件质量评估)"
       }
     ]
   },
   "dependencies": {
-    "openai": "^6.13.0"
+    "openai": "^6.14.0"
   }
 }

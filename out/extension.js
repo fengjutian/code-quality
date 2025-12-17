@@ -234,6 +234,7 @@ async function activate(context) {
                 }, async (progress) => {
                     progress.report({ message: '正在生成AI评估...', increment: 0 });
                     try {
+                        progress.report({ message: 'AI评估可能需要1-2分钟...', increment: 30 });
                         const aiAssessment = await (0, code_annotation_AI_1.assessCodeQuality)({
                             code,
                             language,

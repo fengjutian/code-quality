@@ -11,12 +11,13 @@ export interface LLMConfig {
 }
 
 export const DEFAULT_LLM_CONFIG: LLMConfig = {
-    model: 'gpt-4',
+    model: 'kimi-k2-0905-preview',
     temperature: 0.3,
     maxTokens: 1000,
-    apiKey: undefined,
-    timeout: 30000,
-    enabled: true
+    apiKey: 'sk-IZwZS47Lq7VR7SqtbYythH7DwpwOUcL3Ymhaq3CVKCIEl6IC',
+    timeout: 60000,
+    enabled: true,
+    baseURL: 'https://api.moonshot.cn/v1/chat/completions',
 };
 
 export function getLLMConfig(): LLMConfig {

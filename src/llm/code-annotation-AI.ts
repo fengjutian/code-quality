@@ -31,29 +31,29 @@ export async function assessCodeQuality(options: AIAnnotationOptions): Promise<C
         // 构建系统提示
         const systemPrompt = `你是一名专业的代码质量评估专家，请分析以下${language}代码的质量。
 
-评估要求：
-1. 首先给出总体评分（1-10分）
-2. 提供简要的整体评估摘要
-3. 列出代码的主要优点（3-5点）
-4. 列出代码的主要缺点（3-5点）
-5. 提供具体的改进建议（3-5点）
+          评估要求：
+          1. 首先给出总体评分（1-10分）
+          2. 提供简要的整体评估摘要
+          3. 列出代码的主要优点（3-5点）
+          4. 列出代码的主要缺点（3-5点）
+          5. 提供具体的改进建议（3-5点）
 
-请使用结构化的中文输出，保持专业、客观，并提供具体的改进建议。`;
-        
-        // 构建用户提示
-        const userPrompt = `文件路径：${filePath || '未知'}
-代码行数：${lineCount || code.split('\n').length}
+          请使用结构化的中文输出，保持专业、客观，并提供具体的改进建议。`;
+                  
+                  // 构建用户提示
+                  const userPrompt = `文件路径：${filePath || '未知'}
+          代码行数：${lineCount || code.split('\n').length}
 
-代码内容：
-${code}
+          代码内容：
+          ${code}
 
-已发现的问题：
-${issues.length > 0 ? 
-    issues.map((issue, index) => `${index + 1}. ${issue.message} (第${issue.line}行)`).join('\n') : 
-    '未发现明显问题'
-}
+          已发现的问题：
+          ${issues.length > 0 ? 
+              issues.map((issue, index) => `${index + 1}. ${issue.message} (第${issue.line}行)`).join('\n') : 
+              '未发现明显问题'
+          }
 
-请按照要求评估这段代码的质量：`;
+          请按照要求评估这段代码的质量：`;
         
         // 调用LLM生成评估
         const messages: import('./llm').LLMMessage[] = [
@@ -241,6 +241,8 @@ export async function createAIQualityAssessmentCommand() {
                 // const qualityScore = calculateQualityScore([], code);
                 
                 progress.report({ message: '正在生成AI评估...', increment: 50 });
+                
+                progress.report({ message: 'AI评估可能需要1-2分钟...', increment: 30 });
                 
                 const assessment = await assessCodeQuality({
                     code,

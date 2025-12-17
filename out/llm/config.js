@@ -5,12 +5,13 @@ exports.getLLMConfig = getLLMConfig;
 exports.validateLLMConfig = validateLLMConfig;
 const vscode = require("vscode");
 exports.DEFAULT_LLM_CONFIG = {
-    model: 'gpt-4',
+    model: 'kimi-k2-0905-preview',
     temperature: 0.3,
     maxTokens: 1000,
-    apiKey: undefined,
-    timeout: 30000,
-    enabled: true
+    apiKey: 'sk-IZwZS47Lq7VR7SqtbYythH7DwpwOUcL3Ymhaq3CVKCIEl6IC',
+    timeout: 60000,
+    enabled: true,
+    baseURL: 'https://api.moonshot.cn/v1/chat/completions',
 };
 function getLLMConfig() {
     const config = vscode.workspace.getConfiguration('codeQualityAnalyzer.llm');
