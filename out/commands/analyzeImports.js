@@ -4,7 +4,7 @@ exports.registerAnalyzeImportsCommand = registerAnalyzeImportsCommand;
 const vscode = require("vscode");
 const analyzeImports_1 = require("../utils/analyzeImports");
 function registerAnalyzeImportsCommand() {
-    const disposable = vscode.commands.registerCommand('extension.showImports', () => {
+    const disposable = vscode.commands.registerCommand('extension.analyzeImports', () => {
         const editor = vscode.window.activeTextEditor;
         if (!editor) {
             vscode.window.showErrorMessage('没有打开任何文件');

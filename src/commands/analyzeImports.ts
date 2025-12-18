@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { analyzeFileImports } from '../utils/analyzeImports';
 
 export function registerAnalyzeImportsCommand() {
-    const disposable = vscode.commands.registerCommand('extension.showImports', () => {
+    const disposable = vscode.commands.registerCommand('extension.analyzeImports', () => {
         const editor = vscode.window.activeTextEditor;
         if (!editor) {
             vscode.window.showErrorMessage('没有打开任何文件');
