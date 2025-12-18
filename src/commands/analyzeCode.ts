@@ -64,7 +64,7 @@ export function registerAnalyzeCodeCommand(context: vscode.ExtensionContext, dia
                 );
             }
         } catch (err: unknown) {
-            handleError(err, diagnosticCollection);
+            // handleError(err, diagnosticCollection);
         }
     });
 }

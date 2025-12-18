@@ -39,6 +39,10 @@
         "title": "CodeOracle: Analyze Code (当前文件)"
       },
       {
+        "command": "extension.analyzeImports",
+        "title": "CodeOracle: Analyze Imports (当前文件导入)"
+      },
+      {
         "command": "extension.analyzeProject",
         "title": "CodeOracle: Analyze Code (整个项目)"
       },
@@ -83,6 +87,11 @@
           "command": "extension.analyzeSelectedCodeWithAI",
           "when": "editorHasSelection",
           "group": "codeQuality@3"
+        },
+        {
+          "command": "extension.analyzeImports",
+          "when": "editorTextFocus",
+          "group": "codeQuality@4"
         }
       ]
     },
@@ -135,6 +144,7 @@
     }
   },
   "dependencies": {
+    "builtin-modules": "^5.0.0",
     "openai": "^6.14.0"
   }
 }
