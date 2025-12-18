@@ -46,6 +46,10 @@
         "title": "CodeOracle: Analyze Code (AI当前文件质量评估)"
       },
       {
+        "command": "extension.analyzeSelectedCodeWithAI",
+        "title": "CodeOracle: Analyze Selected Code (AI分析选中代码)"
+      },
+      {
         "command": "extension.configureLLM",
         "title": "CodeOracle: Configure LLM Settings (大模型配置)"
       }
@@ -73,6 +77,11 @@
           "command": "extension.analyzeWithAI",
           "when": "editorTextFocus",
           "group": "codeQuality@2"
+        },
+        {
+          "command": "extension.analyzeSelectedCodeWithAI",
+          "when": "editorHasSelection",
+          "group": "codeQuality@3"
         }
       ]
     },

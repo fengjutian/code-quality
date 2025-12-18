@@ -11,6 +11,19 @@ const code_annotation_AI_1 = require("./llm/code-annotation-AI");
 const ai_template_1 = require("./view-template/ai-template");
 const config_1 = require("./llm/config");
 const quailty_check_1 = require("./utils/quailty-check");
+class AISelectedCodeActionProvider {
+    provideCodeActions(document, range) {
+        if (range.isEmpty)
+            return;
+        const action = new vscode.CodeAction('CodeOracle: 分析选中代码 (AI)', vscode.CodeActionKind.QuickFix);
+        action.command = {
+            command: 'extension.analyzeSelectedCodeWithAI',
+            title: '分析选中代码',
+            arguments: [document, range]
+        };
+        return [action];
+    }
+}
 /**
  * 根据 qualityScore 生成所有 issues
  */
@@ -47,6 +60,7 @@ function analyzeFileAndGenerateIssues(codeText, diagnostics, filePath) {
 async function activate(context) {
     const diagnosticCollection = vscode.languages.createDiagnosticCollection('codeQuality');
     context.subscriptions.push(diagnosticCollection);
+    context.subscriptions.push(vscode.languages.registerCodeActionsProvider({ scheme: 'file', language: '*' }, new AISelectedCodeActionProvider(), { providedCodeActionKinds: [vscode.CodeActionKind.QuickFix] }));
     // 通用错误处理
     function handleError(err, collection) {
         const errorMessage = err instanceof Error ? err.message : '未知错误';
@@ -266,11 +280,61 @@ async function activate(context) {
             handleError(err, diagnosticCollection);
         }
     });
+    // 注册命令，处理用户输入 + 调用 LLM
+    const analyzeSelectedCodeWithAIDisposable = vscode.commands.registerCommand('extension.analyzeSelectedCodeWithAI', async (document, range) => {
+        const editor = vscode.window.activeTextEditor;
+        if (!editor)
+            return vscode.window.showErrorMessage('没有打开任何文件');
+        const selectedCode = document.getText(range);
+        const language = document.languageId;
+        const filePath = document.uri.fsPath;
+        if (!selectedCode)
+            return vscode.window.showErrorMessage('没有选中任何代码');
+        // 1️⃣ 弹出输入框，让用户输入想让 AI 分析的内容
+        const userPrompt = await vscode.window.showInputBox({
+            prompt: '请输入你希望AI分析的额外信息或问题（可选）',
+            placeHolder: '例如：请检查性能问题、潜在BUG或优化建议'
+        });
+        if (userPrompt === undefined)
+            return; // 用户取消
+        // 2️⃣ 检查 LLM 配置
+        const llmConfig = (0, config_1.getLLMConfig)();
+        if (!llmConfig.enabled) {
+            return vscode.window.showInformationMessage('AI功能未启用，请在设置中启用后重试！');
+        }
+        try {
+            // 3️⃣ 调用大模型分析
+            await vscode.window.withProgress({
+                location: vscode.ProgressLocation.Notification,
+                title: '正在使用AI分析选中代码...',
+                cancellable: true
+            }, async (progress) => {
+                progress.report({ message: '发送代码到AI分析...', increment: 20 });
+                const aiResult = await (0, code_annotation_AI_1.assessCodeQuality)({
+                    code: selectedCode,
+                    language,
+                    filePath,
+                    lineCount: range.end.line - range.start.line + 1,
+                    userPrompt // 用户输入附加信息
+                });
+                progress.report({ message: 'AI分析完成，生成报告...', increment: 100 });
+                // 4️⃣ 显示 Webview 报告
+                const panel = vscode.window.createWebviewPanel('codeQualityAIReport', 'AI选中代码分析报告', vscode.ViewColumn.Beside, { enableScripts: true });
+                panel.webview.html = (0, ai_template_1.generateAIReportHTML)(aiResult);
+                vscode.window.showInformationMessage('AI选中代码分析完成！');
+            });
+        }
+        catch (err) {
+            const msg = err instanceof Error ? err.message : 'AI分析失败';
+            vscode.window.showErrorMessage(msg);
+        }
+    });
     // 注册配置命令
     const configureLLMDisposable = vscode.commands.registerCommand('extension.configureLLM', () => {
+        // 打开设置页面并定位到我们的扩展配置
         vscode.commands.executeCommand('workbench.action.openSettings', 'codeQualityAnalyzer.llm');
     });
-    context.subscriptions.push(disposable, projectDisposable, analyzeWithAIDisposable, configureLLMDisposable);
+    context.subscriptions.push(disposable, projectDisposable, analyzeWithAIDisposable, analyzeSelectedCodeWithAIDisposable, configureLLMDisposable);
 }
 function deactivate() { }
 //# sourceMappingURL=extension.js.map
