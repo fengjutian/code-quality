@@ -74,7 +74,7 @@ export function registerAnalyzeWithAICommand(context: vscode.ExtensionContext, d
                 vscode.window.showInformationMessage('代码分析完成！(AI功能未启用)');
             }
         } catch (err: unknown) {
-            handleError(err, diagnosticCollection);
+            // handleError(err, diagnosticCollection);
         }
     });
 }

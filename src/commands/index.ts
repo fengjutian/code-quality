@@ -6,8 +6,6 @@ import { registerAnalyzeWithAICommand } from './analyzeWithAI';
 import { registerConfigureLLMCommand } from './configureLLM';
 import { registerAnalyzeImportsCommand } from './analyzeImports';
 
-
-
 export function registerCommands(context: vscode.ExtensionContext, diagnosticCollection: vscode.DiagnosticCollection): void {
     const commands = [
         registerAnalyzeCodeCommand(context, diagnosticCollection),

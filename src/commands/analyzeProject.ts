@@ -97,7 +97,7 @@ export function registerAnalyzeProjectCommand(context: vscode.ExtensionContext, 
                 }
             });
         } catch (err: unknown) {
-            handleError(err, diagnosticCollection);
+            // handleError(err, diagnosticCollection);
         }
     });
 }

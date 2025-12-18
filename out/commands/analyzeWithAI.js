@@ -65,7 +65,7 @@ function registerAnalyzeWithAICommand(context, diagnosticCollection) {
             }
         }
         catch (err) {
-            handleError(err, diagnosticCollection);
+            // handleError(err, diagnosticCollection);
         }
     });
 }

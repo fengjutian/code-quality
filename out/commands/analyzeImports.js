@@ -1,41 +1,33 @@
-import * as vscode from 'vscode';
-import { analyzeFileImports } from '../utils/analyzeImports';
-
-export function registerAnalyzeImportsCommand() {
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.registerAnalyzeImportsCommand = registerAnalyzeImportsCommand;
+const vscode = require("vscode");
+const analyzeImports_1 = require("../utils/analyzeImports");
+function registerAnalyzeImportsCommand() {
     const disposable = vscode.commands.registerCommand('extension.showImports', () => {
         const editor = vscode.window.activeTextEditor;
         if (!editor) {
             vscode.window.showErrorMessage('没有打开任何文件');
             return;
         }
-
         const filePath = editor.document.uri.fsPath;
-        const imports = analyzeFileImports(filePath);
-
+        const imports = (0, analyzeImports_1.analyzeFileImports)(filePath);
         // 创建Webview面板
-        const panel = vscode.window.createWebviewPanel(
-            'importsVisualization',
-            '导入依赖可视化',
-            vscode.ViewColumn.Beside,
-            {
-                enableScripts: true,
-                retainContextWhenHidden: true
-            }
-        );
-
+        const panel = vscode.window.createWebviewPanel('importsVisualization', '导入依赖可视化', vscode.ViewColumn.Beside, {
+            enableScripts: true,
+            retainContextWhenHidden: true
+        });
         // 统计各类导入数量
         const stats = {
             thirdParty: imports.filter(m => m.type === 'third-party').length,
             local: imports.filter(m => m.type === 'local').length,
             builtin: imports.filter(m => m.type === 'builtin').length
         };
-
         // 准备可视化数据
         const moduleData = imports.map((module, index) => ({
             ...module,
             id: index
         }));
-
         // 生成HTML内容
         panel.webview.html = `
             <!DOCTYPE html>
@@ -186,8 +178,8 @@ export function registerAnalyzeImportsCommand() {
                         ${moduleData.map(module => `
                             <div class="module-item">
                                 <div class="module-type" style="background-color: 
-                                    ${module.type === 'builtin' ? '#4ec9b0' : 
-                                      module.type === 'third-party' ? '#c586c0' : '#9cdcfe'}"></div>
+                                    ${module.type === 'builtin' ? '#4ec9b0' :
+            module.type === 'third-party' ? '#c586c0' : '#9cdcfe'}"></div>
                                 <div class="module-name">${module.name}</div>
                                 <div class="module-type-badge">${module.type}</div>
                             </div>
@@ -256,6 +248,6 @@ export function registerAnalyzeImportsCommand() {
             </html>
         `;
     });
-
-    return disposable
+    return disposable;
 }
+//# sourceMappingURL=analyzeImports.js.map
