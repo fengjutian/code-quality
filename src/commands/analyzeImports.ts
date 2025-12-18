@@ -1,5 +1,8 @@
 import * as vscode from 'vscode';
+import * as fs from 'fs';
+import * as path from 'path';
 import { analyzeFileImports } from '../utils/analyzeImports';
+
 
 export function registerAnalyzeImportsCommand() {
     const disposable = vscode.commands.registerCommand('extension.analyzeImports', () => {
@@ -127,6 +130,7 @@ export function registerAnalyzeImportsCommand() {
                         margin-bottom: 5px;
                         border-radius: 4px;
                         background: #333;
+                        cursor: pointer;
                     }
                     .module-item:hover {
                         background: #3a3a3a;
@@ -184,7 +188,7 @@ export function registerAnalyzeImportsCommand() {
                     <div class="modules-title">模块列表</div>
                     <div id="modulesContainer">
                         ${moduleData.map(module => `
-                            <div class="module-item">
+                            <div class="module-item" data-module-id="${module.id}">
                                 <div class="module-type" style="background-color: 
                                     ${module.type === 'builtin' ? '#4ec9b0' : 
                                       module.type === 'third-party' ? '#c586c0' : '#9cdcfe'}"></div>
@@ -251,10 +255,124 @@ export function registerAnalyzeImportsCommand() {
                     ctx.fillText('${imports.length}', centerX, centerY - 10);
                     ctx.font = '12px Arial';
                     ctx.fillText('总模块', centerX, centerY + 10);
+
+                    // 处理模块点击事件
+                    const vscode = acquireVsCodeApi();
+                    
+                    document.querySelectorAll('.module-item').forEach(item => {
+                        item.addEventListener('click', () => {
+                            const moduleId = parseInt(item.getAttribute('data-module-id') || '0');
+                            vscode.postMessage({
+                                type: 'openModule',
+                                moduleId: moduleId
+                            });
+                        });
+                    });
                 </script>
             </body>
             </html>
         `;
+
+        // 添加消息处理
+        panel.webview.onDidReceiveMessage(
+            message => {
+                if (message.type === 'openModule') {
+                    const module = moduleData[message.moduleId];
+                    if (module) {
+                        const currentDir = path.dirname(filePath);
+                        let modulePath: string;
+
+                        if (module.type === 'local') {
+                            // 本地模块：构建绝对路径
+                            modulePath = path.resolve(currentDir, module.name);
+                            // 添加文件扩展名（如果没有）
+                            if (!path.extname(modulePath)) {
+                                const possibleExts = ['.ts', '.tsx', '.js', '.jsx'];
+                                for (const ext of possibleExts) {
+                                    const testPath = `${modulePath}${ext}`;
+                                    if (fs.existsSync(testPath)) {
+                                        modulePath = testPath;
+                                        break;
+                                    }
+                                }
+                                // 如果是目录，查找index文件
+                                if (!path.extname(modulePath)) {
+                                    for (const ext of possibleExts) {
+                                        const indexPath = path.join(modulePath, `index${ext}`);
+                                        if (fs.existsSync(indexPath)) {
+                                            modulePath = indexPath;
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                        } else if (module.type === 'third-party') {
+                            // 第三方模块：查找node_modules中的文件
+                            const workspaceFolder = vscode.workspace.getWorkspaceFolder(editor.document.uri);
+                            if (workspaceFolder) {
+                                const firstPart = module.name.split('/')[0];
+                                modulePath = path.join(workspaceFolder.uri.fsPath, 'node_modules', module.name);
+                                
+                                // 处理不同的第三方模块情况
+                                if (!path.extname(modulePath)) {
+                                    const possibleExts = ['.ts', '.tsx', '.js', '.jsx'];
+                                    // 尝试直接添加扩展名
+                                    for (const ext of possibleExts) {
+                                        const testPath = `${modulePath}${ext}`;
+                                        if (fs.existsSync(testPath)) {
+                                            modulePath = testPath;
+                                            break;
+                                        }
+                                    }
+                                    // 如果是目录，查找package.json或index文件
+                                    if (!path.extname(modulePath)) {
+                                        // 查找package.json中的main字段
+                                        try {
+                                            const pkgPath = path.join(modulePath, 'package.json');
+                                            if (fs.existsSync(pkgPath)) {
+                                                const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'));
+                                                if (pkg.main) {
+                                                    modulePath = path.join(modulePath, pkg.main);
+                                                }
+                                            }
+                                        } catch {}
+                                        
+                                        // 如果还是没有找到，尝试index文件
+                                        if (!path.extname(modulePath)) {
+                                            for (const ext of possibleExts) {
+                                                const indexPath = path.join(modulePath, `index${ext}`);
+                                                if (fs.existsSync(indexPath)) {
+                                                    modulePath = indexPath;
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            } else {
+                                vscode.window.showErrorMessage('无法确定工作区目录');
+                                return;
+                            }
+                        } else {
+                            // 内置模块：显示提示
+                            vscode.window.showInformationMessage(`内置模块 ${module.name} 无法直接打开`);
+                            return;
+                        }
+
+                        // 检查文件是否存在
+                        if (fs.existsSync(modulePath)) {
+                            // 打开文件
+                            vscode.workspace.openTextDocument(vscode.Uri.file(modulePath))
+                                .then(doc => vscode.window.showTextDocument(doc));
+                        } else {
+                            vscode.window.showErrorMessage(`无法找到模块文件: ${modulePath}`);
+                        }
+                    }
+                }
+            },
+            undefined,
+            []
+        );
     });
 
     return disposable
