@@ -12,10 +12,14 @@ const ai_template_1 = require("./view-template/ai-template");
 const config_1 = require("./llm/config");
 const quailty_check_1 = require("./utils/quailty-check");
 class AISelectedCodeActionProvider {
-    provideCodeActions(document, range) {
-        if (range.isEmpty)
+    provideCodeActions(document, range, context, token) {
+        // 检查是否有选中的代码
+        if (range.isEmpty) {
+            console.log('CodeOracle: 没有选中代码，不提供AI分析选项');
             return;
-        const action = new vscode.CodeAction('CodeOracle: 分析选中代码 (AI)', vscode.CodeActionKind.QuickFix);
+        }
+        console.log('CodeOracle: 检测到选中的代码，提供AI分析选项');
+        const action = new vscode.CodeAction('CodeOracle: 分析选中代码 (AI)', vscode.CodeActionKind.Refactor);
         action.command = {
             command: 'extension.analyzeSelectedCodeWithAI',
             title: '分析选中代码',
@@ -60,7 +64,7 @@ function analyzeFileAndGenerateIssues(codeText, diagnostics, filePath) {
 async function activate(context) {
     const diagnosticCollection = vscode.languages.createDiagnosticCollection('codeQuality');
     context.subscriptions.push(diagnosticCollection);
-    context.subscriptions.push(vscode.languages.registerCodeActionsProvider({ scheme: 'file', language: '*' }, new AISelectedCodeActionProvider(), { providedCodeActionKinds: [vscode.CodeActionKind.QuickFix] }));
+    context.subscriptions.push(vscode.languages.registerCodeActionsProvider({ scheme: 'file', language: '*' }, new AISelectedCodeActionProvider(), { providedCodeActionKinds: [vscode.CodeActionKind.Refactor] }));
     // 通用错误处理
     function handleError(err, collection) {
         const errorMessage = err instanceof Error ? err.message : '未知错误';

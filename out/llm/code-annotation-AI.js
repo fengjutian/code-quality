@@ -7,7 +7,7 @@ const llm_1 = require("./llm");
 const vscode = require("vscode");
 const ai_template_1 = require("../view-template/ai-template");
 async function assessCodeQuality(options) {
-    const { code, language, issues = [], filePath, lineCount } = options;
+    const { code, language, issues = [], filePath, lineCount, userPrompt } = options;
     try {
         // 创建LLM服务实例
         const llmService = await (0, llm_1.createLLMService)();
@@ -26,7 +26,7 @@ async function assessCodeQuality(options) {
 
           请使用结构化的中文输出，保持专业、客观，并提供具体的改进建议。`;
         // 构建用户提示
-        const userPrompt = `文件路径：${filePath || '未知'}
+        let userPromptContent = `文件路径：${filePath || '未知'}
           代码行数：${lineCount || code.split('\n').length}
 
           代码内容：
@@ -35,13 +35,21 @@ async function assessCodeQuality(options) {
           已发现的问题：
           ${issues.length > 0 ?
             issues.map((issue, index) => `${index + 1}. ${issue.message} (第${issue.line}行)`).join('\n') :
-            '未发现明显问题'}
+            '未发现明显问题'}`;
+        // 如果有用户输入的附加信息，添加到提示中
+        if (userPrompt) {
+            userPromptContent += `
+
+          用户附加信息：
+          ${userPrompt}`;
+        }
+        userPromptContent += `
 
           请按照要求评估这段代码的质量：`;
         // 调用LLM生成评估
         const messages = [
             { role: 'system', content: systemPrompt },
-            { role: 'user', content: userPrompt }
+            { role: 'user', content: userPromptContent }
         ];
         const response = await llmService.generateResponse(messages);
         // 解析AI响应

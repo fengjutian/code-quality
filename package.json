@@ -11,6 +11,7 @@
   ],
   "activationEvents": [
     "onCommand:extension.analyzeCode",
+    "onCommand:extension.analyzeSelectedCodeWithAI",
     "onSaveTextDocument"
   ],
   "main": "./out/extension.js",
