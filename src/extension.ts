@@ -381,9 +381,21 @@ export async function activate(context: vscode.ExtensionContext) {
           const editor = vscode.window.activeTextEditor;
           if (!editor) return vscode.window.showErrorMessage('没有打开任何文件');
 
-          const selectedCode = document.getText(range);
-          const language = document.languageId;
-          const filePath = document.uri.fsPath;
+          // 处理直接调用命令的情况（没有参数传递）
+          let selectedCode: string;
+          let language: string;
+          let filePath: string;
+
+          if (document && range) {
+              selectedCode = document.getText(range);
+              language = document.languageId;
+              filePath = document.uri.fsPath;
+          } else {
+              // 直接调用命令，使用当前编辑器的选中内容
+              selectedCode = editor.document.getText(editor.selection);
+              language = editor.document.languageId;
+              filePath = editor.document.uri.fsPath;
+          }
 
           if (!selectedCode) return vscode.window.showErrorMessage('没有选中任何代码');
 
