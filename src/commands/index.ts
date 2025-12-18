@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { registerAnalyzeCodeCommand } from './analyzeCode';
 import { registerAnalyzeProjectCommand } from './analyzeProject';
+import { registerAnalyzeProjectModulesCommand } from './analyzeProjectModules';
 import { registerAnalyzeSelectedCodeWithAICommand } from './analyzeSelectedCodeWithAI';
 import { registerAnalyzeWithAICommand } from './analyzeWithAI';
 import { registerConfigureLLMCommand } from './configureLLM';
@@ -10,6 +11,7 @@ export function registerCommands(context: vscode.ExtensionContext, diagnosticCol
     const commands = [
         registerAnalyzeCodeCommand(context, diagnosticCollection),
         registerAnalyzeProjectCommand(context, diagnosticCollection),
+        registerAnalyzeProjectModulesCommand(),
         registerAnalyzeSelectedCodeWithAICommand(context),
         registerAnalyzeWithAICommand(context, diagnosticCollection),
         registerConfigureLLMCommand(),

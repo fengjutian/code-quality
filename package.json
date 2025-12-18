@@ -43,6 +43,10 @@
         "title": "CodeOracle: Analyze Imports (当前文件导入)"
       },
       {
+        "command": "extension.analyzeProjectModules",
+        "title": "CodeOracle: Analyze Modules (整个项目模块)"
+      },
+      {
         "command": "extension.analyzeProject",
         "title": "CodeOracle: Analyze Code (整个项目)"
       },
