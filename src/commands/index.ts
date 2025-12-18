@@ -9,13 +9,13 @@ import { registerAnalyzeImportsCommand } from './analyzeImports';
 
 export function registerCommands(context: vscode.ExtensionContext, diagnosticCollection: vscode.DiagnosticCollection): void {
     const commands = [
-        registerAnalyzeCodeCommand(context, diagnosticCollection),
-        registerAnalyzeProjectCommand(context, diagnosticCollection),
-        registerAnalyzeProjectModulesCommand(),
-        registerAnalyzeSelectedCodeWithAICommand(context),
-        registerAnalyzeWithAICommand(context, diagnosticCollection),
-        registerConfigureLLMCommand(),
-        registerAnalyzeImportsCommand()
+      registerAnalyzeCodeCommand(context, diagnosticCollection),
+      registerAnalyzeProjectCommand(context, diagnosticCollection),
+      registerAnalyzeProjectModulesCommand(),
+      registerAnalyzeSelectedCodeWithAICommand(context),
+      registerAnalyzeWithAICommand(context, diagnosticCollection),
+      registerConfigureLLMCommand(),
+      registerAnalyzeImportsCommand()
     ];
 
     commands.forEach(command => {
