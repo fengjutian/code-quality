@@ -422,11 +422,20 @@ export async function activate(context: vscode.ExtensionContext) {
               }, async (progress) => {
                   progress.report({ message: '发送代码到AI分析...', increment: 20 });
 
+                  // 计算代码行数
+                  let lineCount: number;
+                  if (document && range) {
+                      lineCount = range.end.line - range.start.line + 1;
+                  } else {
+                      // 使用当前编辑器的选中范围
+                      lineCount = editor.selection.end.line - editor.selection.start.line + 1;
+                  }
+
                   const aiResult = await assessCodeQuality({
                       code: selectedCode,
                       language,
                       filePath,
-                      lineCount: range.end.line - range.start.line + 1,
+                      lineCount,
                       userPrompt // 用户输入附加信息
                   });
 

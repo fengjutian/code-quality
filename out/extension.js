@@ -326,11 +326,20 @@ async function activate(context) {
                 cancellable: true
             }, async (progress) => {
                 progress.report({ message: '发送代码到AI分析...', increment: 20 });
+                // 计算代码行数
+                let lineCount;
+                if (document && range) {
+                    lineCount = range.end.line - range.start.line + 1;
+                }
+                else {
+                    // 使用当前编辑器的选中范围
+                    lineCount = editor.selection.end.line - editor.selection.start.line + 1;
+                }
                 const aiResult = await (0, code_annotation_AI_1.assessCodeQuality)({
                     code: selectedCode,
                     language,
                     filePath,
-                    lineCount: range.end.line - range.start.line + 1,
+                    lineCount,
                     userPrompt // 用户输入附加信息
                 });
                 progress.report({ message: 'AI分析完成，生成报告...', increment: 100 });
