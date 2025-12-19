@@ -3,6 +3,7 @@ import { analyzeDirectory } from '../analyzer';
 import { showQualityReport } from '../reportPanel';
 import { calculateQualityScore } from '../utils/qualityScore';
 import { generateIssuesFromQualityScore } from '../services/codeAnalysis';
+import { handleError } from '../utils/errorHandler'; // 导入handleError函数
 
 export function registerAnalyzeProjectCommand(context: vscode.ExtensionContext, diagnosticCollection: vscode.DiagnosticCollection): vscode.Disposable {
     return vscode.commands.registerCommand('extension.analyzeProject', async () => {
@@ -97,7 +98,7 @@ export function registerAnalyzeProjectCommand(context: vscode.ExtensionContext, 
                 }
             });
         } catch (err: unknown) {
-            // handleError(err, diagnosticCollection);
+            handleError(err, diagnosticCollection); // 取消注释并使用handleError函数
         }
     });
 }

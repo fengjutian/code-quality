@@ -68,6 +68,21 @@ function analyzeProjectModules(rootPath: string): { modules: ModuleInfo[], depen
     return { modules, dependencies };
 }
 
+interface VisNode {
+    id: number;
+    label: string;
+    color: string;
+    shape: 'box' | 'triangle' | 'circle';
+}
+
+interface VisEdge {
+    from: number;
+    to: number;
+    arrows: 'to' | 'from' | 'middle' | 'both';
+    color: string;
+    width: number;
+}
+
 /**
  * 注册整个项目模块分析命令
  */
@@ -137,10 +152,10 @@ export function registerAnalyzeProjectModulesCommand(): vscode.Disposable {
                 ...module,
                 id: index
             }));
-            
+
             // 准备vis-network数据
-            const nodes = [];
-            const edges = [];
+            const nodes: VisNode[] = [];
+            const edges: VisEdge[] = [];
             const nodeIds = new Map<string, number>();
             let nodeIdCounter = 0;
             

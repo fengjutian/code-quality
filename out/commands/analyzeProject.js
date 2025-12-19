@@ -6,6 +6,7 @@ const analyzer_1 = require("../analyzer");
 const reportPanel_1 = require("../reportPanel");
 const qualityScore_1 = require("../utils/qualityScore");
 const codeAnalysis_1 = require("../services/codeAnalysis");
+const errorHandler_1 = require("../utils/errorHandler"); // 导入handleError函数
 function registerAnalyzeProjectCommand(context, diagnosticCollection) {
     return vscode.commands.registerCommand('extension.analyzeProject', async () => {
         const workspaceFolders = vscode.workspace.workspaceFolders;
@@ -84,7 +85,7 @@ function registerAnalyzeProjectCommand(context, diagnosticCollection) {
             });
         }
         catch (err) {
-            // handleError(err, diagnosticCollection);
+            (0, errorHandler_1.handleError)(err, diagnosticCollection); // 取消注释并使用handleError函数
         }
     });
 }
