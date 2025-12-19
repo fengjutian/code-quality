@@ -8,8 +8,8 @@ export function registerAnalyzeImportsCommand() {
     const disposable = vscode.commands.registerCommand('extension.analyzeImports', () => {
         const editor = vscode.window.activeTextEditor;
         if (!editor) {
-            vscode.window.showErrorMessage('没有打开任何文件');
-            return;
+          vscode.window.showErrorMessage('没有打开任何文件');
+          return;
         }
 
         const filePath = editor.document.uri.fsPath;
@@ -28,9 +28,9 @@ export function registerAnalyzeImportsCommand() {
 
         // 统计各类导入数量
         const stats = {
-            thirdParty: imports.filter(m => m.type === 'third-party').length,
-            local: imports.filter(m => m.type === 'local').length,
-            builtin: imports.filter(m => m.type === 'builtin').length
+          thirdParty: imports.filter(m => m.type === 'third-party').length,
+          local: imports.filter(m => m.type === 'local').length,
+          builtin: imports.filter(m => m.type === 'builtin').length
         };
 
         // 准备可视化数据
