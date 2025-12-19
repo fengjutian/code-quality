@@ -1,7 +1,8 @@
 {
   "name": "code-oracle",
-  "displayName": "VSCode Code Quality",
+  "displayName": "code-oracle",
   "description": "CodeOracle: 用于代码决策的“预言机”",
+  "publisher": "CodeOracle",
   "version": "0.0.1",
   "engines": {
     "vscode": "^1.80.0"
@@ -148,7 +149,10 @@
     }
   },
   "dependencies": {
+    "ava": "^6.4.1",
     "builtin-modules": "^5.0.0",
-    "openai": "^6.14.0"
+    "openai": "^6.14.0",
+    "tsd": "^0.31.2",
+    "xo": "^0.60.0"
   }
 }
