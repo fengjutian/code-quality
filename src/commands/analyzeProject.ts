@@ -29,6 +29,7 @@ export function registerAnalyzeProjectCommand(context: vscode.ExtensionContext, 
                 for (const result of results) {
                     diagnosticCollection.set(vscode.Uri.file(result.filePath), result.diagnostics);
 
+                    // @ts-ignore
                     const { allIssues: fileIssues } = generateIssuesFromQualityScore(
                         calculateQualityScore(result.diagnostics, result.codeText),
                         result.codeText,

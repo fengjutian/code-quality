@@ -26,6 +26,7 @@ function registerAnalyzeProjectCommand(context, diagnosticCollection) {
                 let allIssues = [];
                 for (const result of results) {
                     diagnosticCollection.set(vscode.Uri.file(result.filePath), result.diagnostics);
+                    // @ts-ignore
                     const { allIssues: fileIssues } = (0, codeAnalysis_1.generateIssuesFromQualityScore)((0, qualityScore_1.calculateQualityScore)(result.diagnostics, result.codeText), result.codeText, result.filePath);
                     allIssues.push(...fileIssues);
                 }
